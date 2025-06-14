@@ -78,60 +78,74 @@ def handle_dynamic_popup(page):
 
 
 def foresttrip_login():
-    with sync_playwright() as p:
-        # 브라우저 설정
-        browser = p.chromium.launch_persistent_context(
-            user_data_dir='./user_data',
-            headless=False,
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--auto-open-devtools-for-tabs'
-            ]
-        )
+    # with sync_playwright() as p:
 
-        page = browser.new_page()
+    playwright = sync_playwright().start()  # ← start()로 수정
 
-        try:
-            # 1. 로그인 페이지 이동
-            page.goto(config['DEFAULT']['LOGIN_URL'], timeout=60000)
-            page.wait_for_selector('#fripPotForm', state='attached')
+    # 브라우저 설정
+    browser = playwright.chromium.launch_persistent_context(
+        user_data_dir='./user_data',
+        headless=False,
+        args=[
+            '--disable-blink-features=AutomationControlled',
+            # '--auto-open-devtools-for-tabs'
+        ]
+    )
 
-            # 2. CSRF 토큰 추출
-            csrf_token = page.query_selector('input[name="_csrf"]').get_attribute('value')
+    page = browser.new_page()
 
-            # 3. 계정 정보 입력 (보안 강화 방식)
-            page.evaluate(f"""() => {{
-                document.querySelector('#mmberId').value = '{config['CREDENTIALS']['USERNAME']}';
-                document.querySelector('#gnrlMmberPssrd').value = '{config['CREDENTIALS']['PASSWORD']}';
-            }}""")
+    try:
+        # 1. 로그인 페이지 이동
+        page.goto(config['DEFAULT']['LOGIN_URL'], timeout=60000)
+        page.wait_for_selector('#fripPotForm', state='attached')
 
-            # 4. 추가 보안 요소 처리
-            page.click('#saveId')
-            page.wait_for_timeout(1000)
+        # 2. CSRF 토큰 추출
+        csrf_token = page.query_selector('input[name="_csrf"]').get_attribute('value')
 
-            # 5. 폼 제출
-            with page.expect_navigation():
-                page.click('.loginBtn')
+        # 3. 계정 정보 입력 (보안 강화 방식)
+        page.evaluate(f"""() => {{
+            document.querySelector('#mmberId').value = '{config['CREDENTIALS']['USERNAME']}';
+            document.querySelector('#gnrlMmberPssrd').value = '{config['CREDENTIALS']['PASSWORD']}';
+        }}""")
 
-            # 6. 레이어 팝업 처리
-            # 동적 팝업 처리 (핵심 부분)
-            # 동적 팝업 처리 (개선된 로직)
-            popup_closed = handle_dynamic_popup(page)
+        # 4. 추가 보안 요소 처리
+        page.click('#saveId')
+        page.wait_for_timeout(1000)
 
-            if popup_closed:
-                print("✅ 팝업 닫기 완료")
-            else:
-                print("ℹ️ 팝업 없음 또는 이미 닫힘")
+        # 5. 폼 제출
+        with page.expect_navigation():
+            page.click('.loginBtn')
 
-            # 로그인 성공 확인
-            page.wait_for_timeout(2000)  # 팝업 닫힌 후 안정화 대기
+        # 6. 레이어 팝업 처리
+        # 동적 팝업 처리 (핵심 부분)
+        # 동적 팝업 처리 (개선된 로직)
+        popup_closed = handle_dynamic_popup(page)
 
-        except Exception as e:
-            page.screenshot(path='login_error.png')
-            print(f'에러 발생: {str(e)}')
+        if popup_closed:
+            print("✅ 팝업 닫기 완료")
+        else:
+            print("ℹ️ 팝업 없음 또는 이미 닫힘")
 
-        finally:
-            browser.close()
+        # 로그인 성공 확인
+        page.wait_for_timeout(2000)  # 팝업 닫힌 후 안정화 대기
+
+        # 또는 3. XPath 사용
+        page.click('//a[contains(@class, "btn-blue") and contains(., "월별예약")]')
+
+        # 클릭 후 페이지 이동 대기 (NetFunnel 등으로 인해 navigation이 아닐 수도 있음)
+        page.wait_for_timeout(2000)  # 2초 대기, 필요시 조정
+
+        page = browser.pages[2]
+
+        # 성공 시 브라우저 컨텍스트 반환
+        return page
+
+    except Exception as e:
+        page.screenshot(path='login_error.png')
+        print(f'에러 발생: {str(e)}')
+    #
+    # finally:
+    #     browser.close()
 
 
 if __name__ == "__main__":
