@@ -1,0 +1,5257 @@
+var _no_click_msg = "\n\n※ 모바일 이용시 일부 브라우저에서 차단 버튼이 나올수 있습니다 클릭하지 마세요";
+
+var mobileChk = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+if(browerCheck == 'fripmobapp' || !mobileChk) {
+    _no_click_msg = "";
+}
+
+function hideGroup (selector, callBack) {
+
+	var arr = ['#siteMap', '.general_search', '.myPage.my_menu', '.myPage.share_2'];
+
+	for (var i=0; i<arr.length; i++) {
+
+		if (arr[i] != selector) {
+
+			$(arr[i]).hide();
+		}
+	}
+
+	if (callBack) {
+
+		return callBack();
+	}
+
+}
+
+function photoWrapSlide () {
+return 1;
+	var param = '.photo_wrap',
+		obj = '.item',
+		btn = '.photo_control',
+		interval = 5000,
+		speed = 300,
+		viewSize = 1,
+		moreSize = 0,
+		dir = 'x',
+		data = 0,
+		auto = false,
+		hover = false,
+		method = 'easeOutCubic',
+		op1 = true;
+
+		stateScrollObj2(param,obj,btn,interval,speed,viewSize,moreSize,dir,data,auto,hover,method,op1);
+}
+
+
+var useDtList = null;
+var hldtList  = null;
+var sctin = null;
+
+function stateScrollObj2(param,obj,btn,interval,speed,viewSize,moreSize,dir,data,auto,hover,method,op1){
+    var param = $(param);
+    var btn = $(btn);
+    var obj = param.find(obj);
+
+    var elem = 0;
+    var objYScale = obj.eq(elem).outerHeight(true)+moreSize;
+    var objXScale = obj.eq(elem).outerWidth(true)+moreSize;
+    var str;
+    var returnNodes;
+
+    var playdir = data;
+    var data = data; // 0:default, 1:prev
+
+    var play = btn.find("[data-control=play]");
+    var stop = btn.find("[data-control=stop]");
+
+    if(auto == true) play.hide(); else stop.hide();
+
+    function viewPhoto(t) {
+
+        var photoView = param.find('.photo_view img');
+        var photoViewHref = param.find('.photo_view a');
+        var itemImg = t ? t.find('img') : obj.eq(elem).find('img');
+
+        photoView.attr('src', itemImg.attr('src'));
+//        photoViewHref.attr('href', itemImg.attr('src'));
+        photoViewHref.attr('href', '/imgView.jsp?imgPath=' + itemImg.attr('src'));
+
+        var itemImgDescpt = itemImg.data('description');
+
+        if (itemImgDescpt) {
+
+            param.find('.view_descpt').html(itemImgDescpt);
+        }
+
+        obj.removeClass('ov').eq(elem).addClass('ov');
+
+        return this;
+    }
+
+    viewPhoto();
+
+	obj.find('a').on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		elem = obj.index(t.parent());
+
+		viewPhoto();
+	});
+
+    function movement(){
+
+        switch(data){
+            case 0:
+                if(dir == "x"){
+                    obj.parent().stop(true,true).animate({left:-objXScale},{duration:speed,easing:method,complete:
+                        function(){
+                            obj.parent().css("left",0);
+                            str = obj.eq(elem).detach();
+                            obj.parent().append(str);
+                            if(elem == obj.size()-1){
+                                elem = 0;
+                            }else{
+                                elem++;
+                            }
+                            objXScale = obj.eq(elem).outerWidth(true)+moreSize;
+
+                            if (op1) {
+
+                                viewPhoto();
+                            }
+                        }
+                    });
+
+
+                }else{
+                    obj.parent().stop(true,true).animate({top:-objYScale},{duration:speed,easing:method,complete:
+                        function(){
+                            obj.parent().css("top",0);
+                            str = obj.eq(elem).detach();
+                            obj.parent().append(str);
+                            if(elem == obj.size()-1){
+                                elem = 0;
+                            }else{
+                                elem++;
+                            }
+                            objYScale = obj.eq(elem).outerHeight(true)+moreSize;
+                        }
+                    });
+                }
+
+            break;
+
+            case 1:
+                if(dir == "x"){
+                    if(elem == 0){
+                        elem = obj.size()-1;
+                    }else{
+                        elem--;
+                    }
+                    objXScale = obj.eq(elem).outerWidth()+moreSize;
+                    obj.parent().css("left",-objXScale);
+                    str = obj.eq(elem).detach();
+                    obj.parent().prepend(str);
+                    obj.parent().stop(true,false).animate({left:0},{duration:speed,easing:method});
+
+                    if (op1) {
+
+                        viewPhoto();
+                    }
+                }else{
+                    if(elem == 0){
+                        elem = obj.size()-1;
+                    }else{
+                        elem--;
+                    }
+                    objYScale = obj.eq(elem).outerHeight()+moreSize;
+                    obj.parent().css("top",-objYScale);
+                    str = obj.eq(elem).detach();
+                    obj.parent().prepend(str);
+                    obj.parent().stop(true,false).animate({top:0},{duration:speed,easing:method});
+                }
+
+            break;
+
+            default: alert("warning, 0:default, 1:prev, data:"+data);
+        }
+    }
+
+    function rotate(){
+        clearInterval(returnNodes);
+        returnNodes = setInterval(function(){
+            movement();
+        },interval);
+    }
+
+    if(obj.size() <= viewSize) return false;
+
+    obj.find("a").on("focusin",function(){
+        clearInterval(returnNodes);
+    });
+
+    btn.find("[data-control=play]").on("click",function(event){
+        data = playdir;
+        play.hide();
+        stop.show();
+        rotate();
+        return false;
+    });
+
+    btn.find("[data-control=stop]").on("click",function(event){
+        clearInterval(returnNodes);
+        param.find(":animated").stop();
+        stop.hide();
+        play.show();
+        return false;
+    });
+
+    btn.find("[data-control=prev]").on("click",function(event){
+        if(obj.parent().find(":animated").size()) return false;
+        clearInterval(returnNodes);
+        data = 1;
+        movement();
+        // add
+        stop.hide();
+        play.show();
+        return false;
+    });
+
+    btn.find("[data-control=next]").on("click",function(event){
+        if(obj.parent().find(":animated").size()) return false;
+        clearInterval(returnNodes);
+        data = 0;
+        movement();
+        // add
+        stop.hide();
+        play.show();
+        return false;
+    });
+
+    if(hover == true){
+        obj.hover(function(){
+            clearInterval(returnNodes);
+        },function(){
+            rotate();
+        });
+    }
+
+    if(auto == true) rotate();
+
+    // 터치 이벤트  플리킹 구현
+    var xStartpoint,xEndpoint;
+
+    function docSTART(event){
+        if(event.originalEvent.changedTouches != undefined){
+            xStartpoint = Math.floor(event.originalEvent.changedTouches[0].clientX - $(this).offset().left);
+        }
+    }
+
+    function docEND(event){
+        if(event.originalEvent.changedTouches != undefined){
+            xEndpoint = Math.floor(event.originalEvent.changedTouches[0].clientX - $(this).offset().left) - xStartpoint;
+
+            if(xEndpoint < -50){
+                data = 0;
+            }else if(xEndpoint > 50){
+                data = 1;
+            }else{
+                return true;
+            }
+
+            clearInterval(returnNodes);
+
+            stop.hide();
+            play.show();
+
+            movement();
+
+            event.preventDefault();
+        }
+    }
+
+    param.on("touchstart",docSTART);
+    param.on("touchend",docEND);
+}
+
+
+function utilLang (t) {
+
+	var t = $(t);
+
+	if (t.next().is(':hidden')) {
+
+		t.next().show();
+	}
+	else {
+
+		t.next().hide();
+	}
+
+	return t;
+}
+
+function utilLang (t) {
+
+	var t = $(t);
+
+	if (t.next().is(':hidden')) {
+
+		t.next().show();
+	}
+	else {
+
+		t.next().hide();
+	}
+
+	return t;
+}
+
+$(function () {
+
+    var parent = $('#header, #flowting_search');
+    var btn = parent.find('.share');
+    var listBtn = parent.find('.my_list a');
+
+    btn.on("click",function (event) {
+
+		hideGroup('.myPage.share_2', function () {
+
+			if ($('#animate').attr('style')) {
+
+				return $('#animate').removeAttr('style');
+			}
+		});
+
+        event.preventDefault();
+
+        var t = $(this);
+
+        if(t.next().is(":hidden")){
+
+            $('.my_page_wrap').find('a').removeClass("on");
+            $(".close_box").parent().fadeOut(300,"easeOutCubic");
+            $(".close_box").parent().prev().removeClass("on");
+
+            t.addClass("on");
+            t.next().fadeIn(300,"easeOutCubic");
+
+        }else{
+
+            t.removeClass("on");
+            t.next().fadeOut(300,"easeOutCubic");
+        }
+    });
+
+    $('.close_box').on("click",function (event) {
+
+        event.preventDefault();
+
+        var t = $(this);
+
+        t.parent().fadeOut(300,"easeOutCubic");
+        t.parent().prev().removeClass("on");
+    });
+
+    listBtn.on('click', function (event) {
+
+        var t = $(this);
+
+        if (t.next().is('ul')) {
+
+            event.preventDefault();
+
+            if (t.next().is(':hidden')) {
+
+                listBtn.removeClass('ov');
+                t.addClass('ov');
+
+                t.next().stop(0, 1).slideDown(300, 'easeOutCubic');
+            }
+            else {
+
+                t.removeClass('ov');
+
+                t.next().stop(0, 1).slideUp(300, 'easeOutCubic');
+            }
+        }
+    });
+});
+
+function swiper(param, cost, touchEndFunction) {
+
+	var parent = $(param);
+	var symbol = parent.find('.symbol');
+	var swbar = parent.find('.procc');
+	var Data = {
+		min: 0,
+		max: 100,
+		state: 0,
+		range: 0,
+		prev: 0,
+		idx: 0,
+		stepArr: []
+	};
+
+	$(window).resize(function () {
+
+		Data.state = swbar.width();
+
+		if (Data.ui) {
+
+			Data.ui = Data.state;
+		}
+
+		symbol.css({ 'left': Data.state});
+	});
+
+	var costLen = cost.length;
+
+	for (var i=0; i<costLen; i++) {
+
+		Data.stepArr[i] = {
+
+			len: i != 0 ? Data.stepArr[i-1].len + 100/costLen : 100/costLen,
+			str: cost[i]
+		}
+
+		//console.log(Data.stepArr[i].len.toFixed(0), Data.stepArr[i].str);
+	}
+	var first = true
+	function movement (ev, touch, ui) {
+
+		Data.ui = false;
+
+		Data.move = touch ? Math.floor(touch) - Data.start : Math.floor(ev.pageX) - Data.start;
+
+		Data.range = Data.move - Data.prev;
+
+		Data.state += Data.range;
+
+		if (Data.state >= parent.width()){
+
+			Data.state = parent.width();
+		}
+
+		if (Data.state <= 0) {
+
+			Data.state = 0;
+		}
+
+		Data.length = Data.state / parent.width() * 100;
+
+		if (ui) {
+
+			Data.ui = ui;
+
+			// PC 일 때 jquery draggable
+			ui.position.left = Data.state;
+		}
+
+		if (touch) {
+
+			symbol.css({ 'left': Data.state });
+		}
+
+		swbar.css({ 'width': Data.length + '%' });
+
+		var cnt = Data.length.toFixed(0);
+
+		parent.find('.cost i').text(function () {
+
+			if ( Data.prev > Data.move ) {
+
+				// left
+
+				if ( Number(cnt) < Number(Data.stepArr[Data.idx].len.toFixed(0)) ) {
+
+					Data.idx--;
+
+					if (Data.idx == -1 ) {
+
+						Data.idx = 0;
+
+						return 0
+					}
+
+					return Data.stepArr[Data.idx].str;
+				}
+			}
+
+			if ( Data.prev < Data.move ) {
+
+				// right
+
+				if ( Number(cnt) > Number(Data.stepArr[Data.idx].len.toFixed(0)) ) {
+
+					Data.idx++;
+
+					return Data.stepArr[Data.idx].str;
+				}
+			}
+		}());
+
+        if(first) {
+            if(Data.length == 100) {
+                parent.find('.cost > span').html(parent.find('.cost > span').html()+'~');
+                parent.find('.cost > span').next().text('over');
+                first = false;
+            }
+        }
+        if(Data.length < 100) {
+            parent.find('.cost > span').html(parent.find('.cost > span').html().replace('~',''));
+            parent.find('.cost > span').next().text('');
+            first = true;
+        }
+
+		Data.prev = Data.move;
+
+		return this;
+	}
+
+	symbol.draggable({
+		axis: "x",
+
+		containment: parent,
+
+		start: function( event ) {
+
+			Data.start = Math.floor(event.pageX);
+		},
+		drag: function( event , ui) {
+
+			movement(event, false, ui);
+
+		},
+		stop: function( event ) {
+			Data.prev = 0;
+
+			if(touchEndFunction != undefined) {
+				touchEndFunction();
+			}
+		}
+	});
+
+	// 모바일용 터치 이벤트
+
+	symbol.on('touchstart touchmove touchend', function (event) {
+
+		var t = $(this);
+
+		if(event.type == "touchstart") {
+
+			Data.start = Math.floor(event.originalEvent.changedTouches[0].clientX);
+		}
+
+		if(event.type == "touchmove") {
+
+			event.preventDefault();
+
+			movement(event, event.originalEvent.changedTouches[0].clientX, false);
+		}
+
+		if(event.type == "touchend" ) {
+			Data.prev = 0;
+
+            if(touchEndFunction != undefined) {
+                touchEndFunction();
+            }
+		}
+	});
+
+	return this;
+}
+
+
+function fnSlide(parent, item, grap, page, btn, du, mth, auto, resArr) {
+
+    'use strict';
+
+    var parent = $(parent);
+    var item = parent.find(item);
+    var grap = parent.find(grap);
+    var btn = parent.find(btn);
+    var page = page ? parent.find(page) : false;
+
+    var elem = 0;
+    var itvr = 0;
+
+    var itemLen = item.length;
+
+    function resArrBtnControl () {
+
+        var docW = document.body.clientWidth;
+
+        for (var i=0; i<resArr.length; i++ ) {
+
+            if (docW >= resArr[i].w) {
+
+                if (item.size() > resArr[i].v) {
+
+                    btn.show();
+                }
+                else {
+
+                    btn.hide();
+                }
+
+                break;
+            }
+            else {
+
+                continue;
+            }
+        }
+    }
+
+    function _page() {
+
+    	if (!page) {
+
+    		return page;
+    	}
+
+    	var pbtn = '';
+
+    	var itemLen = item.length;
+
+    	for (var i=0; i<itemLen; i++) {
+
+    		pbtn += '<span class="button sprity-main sprity-main-ms4_pop_pg'+(elem!=i?'':'_ov')+'"><span class="hide">'+i+'</span></span>';
+    	}
+
+    	return pbtn;
+    }
+
+    function movemont(arg) {
+
+        if(grap.is(":animated")){
+
+            return 0;
+        }
+
+        if (arg === 'prev') {
+
+             if(elem > 0){
+
+                elem--;
+            }
+            else{
+
+                elem = itemLen-1;
+            }
+
+            grap.css({left:item.eq(elem).outerWidth(true)*-1}).prepend(item.eq(elem).detach());
+            grap.stop(1,0).animate({left:0}, du, mth);
+        }
+
+        if (arg === 'next') {
+
+            if(elem < itemLen-1){
+
+                elem++;
+            }
+            else{
+
+                elem = 0;
+            }
+
+            grap.stop(0,1).animate({left:item.eq(elem-1).outerWidth(true)*-1}, du, mth,function(){
+
+                grap.removeAttr("style").append(item.eq(elem-1).detach());
+            });
+        }
+
+        page && page.html(_page());
+
+        return 1;
+    }
+
+    function auto() {
+
+    	if (btn.filter('[data-control=play]')) {
+
+	        itvr = setInterval(function() {
+
+	            movemont('next');
+	        }, 5000);
+
+        }
+
+        return 1;
+    }
+
+    btn.on('click', function(event) {
+
+        event.preventDefault();
+
+        var t = $(this);
+
+        var data = t.data('control');
+
+        if (data === 'play') {
+
+            auto();
+
+            btn.filter('[data-control=play]').css('display', 'none')
+            btn.filter('[data-control=stop]').css('display', 'inline-block');
+        } else {
+
+            clearInterval(itvr);
+
+            movemont(data);
+
+            btn.filter('[data-control=stop]').css('display', 'none')
+            btn.filter('[data-control=play]').css('display', 'inline-block');
+        }
+    });
+
+    if ( auto === true ) {
+        // 기존 사용되는것이 있을것 같아 != 사용
+        auto();
+    }
+
+    page && page.html(_page());
+
+    resArrBtnControl();
+
+    var rw = document.body.clientWidth, rtime = 0
+    $(window).resize(function () {
+
+        if (rw != document.body.clientWidth) {
+
+            clearTimeout(rtime);
+
+            rtime = setTimeout(function () {
+
+                resArrBtnControl();
+
+            }, 100);
+
+            rw = document.body.clientWidth;
+        }
+    });
+};
+
+
+function layout (arg) {
+
+	var SCOPE = this;
+
+	SCOPE.option = arg;
+
+	var Selector = SCOPE.option.selector;
+
+	if (!$(Selector.nav).length) {
+
+		return false;
+	}
+
+	var active = 'in_active';
+	var navOffstTop = $(Selector.nav).offset().top;
+
+	$(window).on('scroll', function (event) {
+
+		var tScrollPos = $(this).scrollTop();
+
+		if (tScrollPos > navOffstTop+$(Selector.nav).height()) {
+			// 스크롤이 기준을 넘었을 때
+
+			if (!$(Selector.nav).hasClass(active)) {
+
+				$(Selector.nav).addClass(active)
+					.attr('style', 'position:fixed;top:'+($(Selector.nav).height()*-1)+'px;left:0;width:100%;')
+					.stop(0, 1).delay(300).animate({ 'top': '0' }, 500, 'easeOutExpo');
+			}
+		}
+
+		if (tScrollPos < navOffstTop) {
+			// 스크롤이 기준안으로 들어왔을 때
+
+			if ($(Selector.nav).hasClass(active)) {
+
+				$(Selector.nav).removeClass(active)
+					.removeAttr('style');
+			}
+		}
+
+	});
+
+	/* nav 드롭다운 메뉴 */
+	var locateDropnMenuLen = $(Selector.locateDropnMenu).length;
+
+	for (var i=0; i<locateDropnMenuLen; i++) {
+
+		var locateDropnMenu = $(Selector.locateDropnMenu).eq(i);
+
+		locateDropnMenu.attr({
+			'data-height': locateDropnMenu.outerHeight()
+		});
+	}
+
+	function outDropMenu () {
+
+		for (var j=0; j<locateDropnMenuLen; j++) {
+
+			var locateDropnMenu = $(Selector.locateDropnMenu).eq(j);
+
+			if (locateDropnMenu.css('display') == 'block') {
+
+				locateDropnMenu
+					.stop(0,1).animate({ 'height': '0', 'opacity': '0' }, 100, 'easeOutExpo', function () {
+
+					$(this).css('display', 'none');
+				});
+			}
+			else {
+
+				continue;
+			}
+		}
+
+		return 1;
+	}
+
+	var idx = null;
+
+	$(Selector.locate).on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (idx != $(Selector.locate).index(t)) {
+
+			outDropMenu();
+
+			t.next()
+				.css({
+
+					'left': t.position().left,
+					'display': 'block',
+					'height': '0',
+					'opacity': '0',
+					'min-width': t.outerWidth()+1 // border-left 로 인해 우측 1px 이 부족하기 때문에
+
+				})
+				.stop(0,1).animate({ 'opacity': '1', 'height': t.next().data('height')+'px' }, 100, 'easeOutCubic');
+		}
+
+		idx = $(Selector.locate).index(t);
+	});
+
+	$(Selector.nav).on('mouseleave', function (event) {
+
+		outDropMenu();
+
+		idx = null;
+	});
+
+	return 1;
+}
+
+
+function fsSearch (arg) {
+
+	var SCOPE = this;
+
+	SCOPE.option = arg;
+
+	var Selector = SCOPE.option.selector;
+
+	if (!$(Selector.nav).length) {
+
+		return false;
+	}
+
+	var active = 'in_active';
+	var navOffstTop = $(Selector.nav).offset().top;
+
+	$(window).on('scroll', function (event) {
+
+		var tScrollPos = $(this).scrollTop();
+
+		if (tScrollPos > navOffstTop+$(Selector.nav).height()) {
+			// 스크롤이 기준을 넘었을 때
+
+			if (!$(Selector.nav).hasClass(active)) {
+
+				$('.my_menu').hide();
+
+				$(Selector.nav).addClass(active)
+					.css({ top: $(Selector.nav).outerHeight()*-1 })
+					.stop(0, 1).delay(300).animate({ 'top': '0' }, 500, 'easeOutExpo');
+			}
+		}
+
+		if (tScrollPos < navOffstTop) {
+			// 스크롤이 기준안으로 들어왔을 때
+
+			if ($(Selector.nav).hasClass(active)) {
+
+				$('.my_menu').hide();
+
+				$(Selector.nav).removeClass(active)
+					.removeAttr('style');
+			}
+		}
+
+		//박영범 추가
+		if (tScrollPos == navOffstTop) {
+            // 스크롤이 기준안으로 들어왔을 때
+
+            if ($(Selector.nav).hasClass(active)) {
+                $(Selector.nav).removeClass(active);
+            }
+        }
+
+	});
+
+	var fsOpen = $('.fs_open a');
+	var fsObj = $('#flowting_search .fs_wrap .layout');
+
+	fsOpen.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+		var role = t.attr('title');
+
+		if ( role  == 'open') {
+
+			fsObj.stop(0, 1).slideDown(300, 'easeOutExpo');
+		}
+
+		if ( role  == 'close') {
+
+			fsObj.stop(0, 1).slideUp(300, 'easeOutExpo');
+		}
+
+		fsOpen.css('display', 'inline-block');
+		t.css('display', 'none');
+
+	});
+
+	var rw = document.body.clientWidth, rtime = 0
+	$(window).resize(function () {
+
+		if (document.body.clientWidth > 1099) {
+
+			if (rw != document.body.clientWidth) {
+
+				clearTimeout(rtime);
+
+				rtime = setTimeout(function () {
+
+					fsObj.removeAttr('style');
+					fsOpen.removeAttr('style');
+
+				}, 100);
+
+				rw = document.body.clientWidth;
+			}
+		}
+	});
+
+	return this;
+}
+
+function allCheckedUnChecked(_this, _parents, _child) {
+
+	var allcheckBox = $('input[name='+_this.name+']');
+
+	var idx = allcheckBox.index(_this);
+
+	// 전체체크상자가 한 화면에 두개 이상 있을 때
+	if (allcheckBox.length > 1) {
+
+		// 현재 것이 아닌 전체선택 상자를 찾아서 체크상태로 만들어 준다.
+		var notAllCheckBox = allcheckBox.not(allcheckBox.eq(idx))[0];
+
+		// 현재 것이 아닌 전체선택 상자가 체크된 상태면
+		if (notAllCheckBox.checked) {
+
+			// 체크 해제
+			notAllCheckBox.checked = false;
+		}
+		// 체크 상태가 아니면
+		else {
+
+			// 체크
+			notAllCheckBox.checked = true;
+		}
+	}
+
+	var parent = $(_this).parents(_parents);
+
+	var bodyTr = parent.find('input[name='+_child+']').parent();
+
+	var checkTest = parent.find('input[name='+_child+']');
+	var checkTestLen = checkTest.length;
+	var checkedTrueNumber = 0;
+
+	if (checkTest.filter(':checked').length == checkTestLen) {
+
+		for (var i=0; i<checkTestLen; i++) {
+
+			checkTest.get(i).checked = false;
+		}
+	}
+	else {
+
+		for (var i=0; i<checkTestLen; i++) {
+
+			if (checkTest.get(i).checked == false) {
+
+				checkTest.get(i).checked = true;
+			}
+			else {
+
+				continue;
+			}
+		}
+	}
+
+	checkTest.on('click', function (event) {
+
+		_this.checked = false;
+	});
+
+	return true;
+}
+
+function removeLayer (callBack) {
+
+	$('.huyang_layer').fadeOut(300, 'easeOutCubic',function () {
+
+		$(this).remove();
+	});
+
+	if (callBack) {
+
+		if ($.isArray(callBack)) {
+
+			for (var i=0; i<callBack.length; i++) {
+
+				callBack[i](id);
+			}
+
+			return false;
+		}
+
+		callBack(id);
+	}
+}
+
+
+function photoswipe() {
+// 레이어팝업 이미지 뷰어, 스와이프
+
+	/*
+
+	 <!-- Core CSS file -->
+	 <link rel="stylesheet" href="path/to/photoswipe.css">
+
+	 <!-- Skin CSS file (styling of UI - buttons, caption, etc.)
+	 In the folder of skin CSS file there are also:
+	 - .png and .svg icons sprite,
+	 - preloader.gif (for browsers that do not support CSS animations) -->
+	 <link rel="stylesheet" href="path/to/default-skin/default-skin.css">
+
+	 <!-- Core JS file -->
+	 <script src="path/to/photoswipe.min.js"></script>
+
+	 <!-- UI JS file -->
+	 <script src="path/to/photoswipe-ui-default.min.js"></script>
+
+	 */
+	var diaPop = $('.diaPop, .diaPopGroup');
+	var pswp = $('.pswp');
+
+	diaPop.attr('title', '이미지 크게 보기');
+
+	if (!diaPop.length) {
+
+		return false;
+	}
+
+	if (!pswp.length) {
+
+		var pswp = ''+
+			'<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">'+
+			'  <div class="pswp__bg"></div>'+
+			'  <div class="pswp__scroll-wrap">'+
+			'      <div class="pswp__container">'+
+			'          <div class="pswp__item"></div>'+
+			'          <div class="pswp__item"></div>'+
+			'          <div class="pswp__item"></div>'+
+			'      </div>'+
+			'      <div class="pswp__ui pswp__ui--hidden">'+
+			'        <div class="pswp__top-bar">'+
+			'          <div class="pswp__counter"></div>'+
+			'          <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>'+
+			'          <button class="pswp__button pswp__button--share" title="Share"></button>'+
+			'          <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>'+
+			'          <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>'+
+			'          <div class="pswp__preloader">'+
+			'              <div class="pswp__preloader__icn">'+
+			'                <div class="pswp__preloader__cut">'+
+			'                  <div class="pswp__preloader__donut"></div>'+
+			'                </div>'+
+			'              </div>'+
+			'          </div>'+
+			'      </div>'+
+			'      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">'+
+			'          <div class="pswp__share-tooltip"></div>'+
+			'      </div>'+
+			'      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>'+
+			'      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>'+
+			'      <div class="pswp__caption">'+
+			'          <div class="pswp__caption__center"></div>'+
+			'      </div>'+
+			'    </div>'+
+			'  </div>'+
+			'</div>';
+
+
+		$('body').append(pswp);
+
+		// 리소스 추가
+		var doc = document;
+		var photoswipeCss = doc.createElement('link');
+		photoswipeCss.rel = 'stylesheet';
+		photoswipeCss.href = '/portal/js/photoswipe/photoswipe.css';
+
+		var defaultSkinCss = doc.createElement('link');
+		defaultSkinCss.rel = 'stylesheet';
+		defaultSkinCss.href = '/portal/js/photoswipe/default-skin/default-skin.css';
+
+		var photoswipeMinJs = doc.createElement('script');
+		photoswipeMinJs.src = '/portal/js/photoswipe/photoswipe.min.js';
+
+		var photoswipeUiDefaultMinJs = doc.createElement('script');
+		photoswipeUiDefaultMinJs.src = '/portal/js/photoswipe/photoswipe-ui-default.min.js';
+
+		var insertTarget = doc.getElementsByTagName('script')[0];
+
+		var arr = [ photoswipeCss, defaultSkinCss, photoswipeMinJs, photoswipeUiDefaultMinJs ];
+
+		for (var i=0; i<arr.length; i++) {
+
+			insertTarget.parentNode.insertBefore(arr[i], insertTarget);
+		}
+	}
+
+	var diaPopImg = '';
+	var dataSize  = '';
+	var size = '';
+
+// 속성 추가
+	for (var j=0; j<diaPop.length; j++) {
+
+		if (diaPop.eq(j).hasClass('diaPopGroup')) {
+
+			diaPopImg = $('.diaPopGroup img').get(j);
+
+			diaPop.eq(j)
+				.wrap('<div class="photoswipe" itemscope itemtype="http://schema.org/ImageGallery">')
+				.find('a').attr({
+
+				'itemprop': 'contentUrl',
+				'data-size': diaPopImg.getAttribute("data-menual") ? diaPopImg.getAttribute("data-menual") : diaPopImg.naturalWidth+'x'+diaPopImg.naturalHeight
+
+			})
+				.wrap('<figure itemprop="associatedMedia">')
+				.after('<figcaption itemprop="caption description">')
+				.children().attr('itemprop', 'thumbnail');
+
+		}
+		else {
+
+			diaPopImg = $('.diaPop img').get(j);
+
+			diaPop.eq(j)
+				.attr({
+					'itemprop': 'contentUrl',
+					'data-size': diaPopImg.getAttribute("data-menual") ? diaPopImg.getAttribute("data-menual") : diaPopImg.naturalWidth+'x'+diaPopImg.naturalHeight
+				})
+				.wrap('<div class="photoswipe" itemscope itemtype="http://schema.org/ImageGallery"><figure itemprop="associatedMedia">')
+				.after('<figcaption itemprop="caption description" class="photoswipe_caption">')
+				.children().attr('itemprop', 'thumbnail');
+
+		}
+	}
+
+    $('.diaPop').on('click', function () {
+
+        window.diaPopReturnFocus = $(this);
+
+        var t = $(this);
+        var tLongdesc = t.find('img').attr('longdesc');
+
+        setTimeout(function () {
+
+            $('.pswp__button--close').focus();
+
+            $('.pswp__img').attr('alt', t.find('img').attr('alt'));
+
+            if (tLongdesc) {
+
+                $('.pswp__img').attr('longdesc', tLongdesc);
+            }
+        },800);
+    });
+
+	var initPhotoSwipeFromDOM = function(gallerySelector) {
+
+		// parse slide data (url, title, size ...) from DOM elements
+		// (children of gallerySelector)
+		var parseThumbnailElements = function(el) {
+			var thumbElements = el.childNodes,
+				numNodes = thumbElements.length,
+				items = [],
+				figureEl,
+				linkEl,
+				size,
+				item;
+
+			for(var i = 0; i < numNodes; i++) {
+
+				figureEl = thumbElements[i]; // <figure> element
+
+				// include only element nodes
+				if(figureEl.nodeType !== 1) {
+					continue;
+				}
+
+				linkEl = figureEl.children[0]; // <a> element
+
+				size = linkEl.getAttribute('data-size').split('x');
+
+				// create slide object
+				item = {
+					src: linkEl.getAttribute('href'),
+					w: parseInt(size[0], 10),
+					h: parseInt(size[1], 10)
+				};
+
+
+
+				if(figureEl.children.length > 1) {
+					// <figcaption> content
+					item.title = figureEl.children[1].innerHTML;
+				}
+
+				if(linkEl.children.length > 0) {
+					// <img> thumbnail element, retrieving thumbnail url
+					item.msrc = linkEl.children[0].getAttribute('src');
+				}
+
+				item.el = figureEl; // save link to element for getThumbBoundsFn
+				items.push(item);
+			}
+
+			return items;
+		};
+
+		// find nearest parent element
+		var closest = function closest(el, fn) {
+			return el && ( fn(el) ? el : closest(el.parentNode, fn) );
+		};
+
+		// triggers when user clicks on thumbnail
+		var onThumbnailsClick = function(e) {
+			e = e || window.event;
+			e.preventDefault ? e.preventDefault() : e.returnValue = false;
+
+			var eTarget = e.target || e.srcElement;
+
+			// find root element of slide
+			var clickedListItem = closest(eTarget, function(el) {
+				return (el.tagName && el.tagName.toUpperCase() === 'FIGURE');
+			});
+
+			if(!clickedListItem) {
+				return;
+			}
+
+			// find index of clicked item by looping through all child nodes
+			// alternatively, you may define index via data- attribute
+			var clickedGallery = clickedListItem.parentNode,
+				childNodes = clickedListItem.parentNode.childNodes,
+				numChildNodes = childNodes.length,
+				nodeIndex = 0,
+				index;
+
+			for (var i = 0; i < numChildNodes; i++) {
+				if(childNodes[i].nodeType !== 1) {
+					continue;
+				}
+
+				if(childNodes[i] === clickedListItem) {
+					index = nodeIndex;
+					break;
+				}
+				nodeIndex++;
+			}
+
+
+
+			if(index >= 0) {
+				// open PhotoSwipe if valid index found
+				openPhotoSwipe( index, clickedGallery );
+			}
+			return false;
+		};
+
+		// parse picture index and gallery index from URL (#&pid=1&gid=2)
+		var photoswipeParseHash = function() {
+			var hash = window.location.hash.substring(1),
+				params = {};
+
+			if(hash.length < 5) {
+				return params;
+			}
+
+			var vars = hash.split('&');
+			for (var i = 0; i < vars.length; i++) {
+				if(!vars[i]) {
+					continue;
+				}
+				var pair = vars[i].split('=');
+				if(pair.length < 2) {
+					continue;
+				}
+				params[pair[0]] = pair[1];
+			}
+
+			if(params.gid) {
+				params.gid = parseInt(params.gid, 10);
+			}
+
+			return params;
+		};
+
+		var openPhotoSwipe = function(index, galleryElement, disableAnimation, fromURL) {
+			var pswpElement = document.querySelectorAll('.pswp')[0],
+				gallery,
+				options,
+				items;
+
+			items = parseThumbnailElements(galleryElement);
+
+			// define options (if needed)
+			options = {
+
+				// define gallery index (for URL)
+				galleryUID: galleryElement.getAttribute('data-pswp-uid'),
+
+				getThumbBoundsFn: function(index) {
+					// See Options -> getThumbBoundsFn section of documentation for more info
+					var thumbnail = items[index].el.getElementsByTagName('img')[0], // find thumbnail
+						pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
+						rect = thumbnail.getBoundingClientRect();
+
+					return {x:rect.left, y:rect.top + pageYScroll, w:rect.width};
+				}
+
+			};
+
+			// PhotoSwipe opened from URL
+			if(fromURL) {
+				if(options.galleryPIDs) {
+					// parse real index when custom PIDs are used
+					// http://photoswipe.com/documentation/faq.html#custom-pid-in-url
+					for(var j = 0; j < items.length; j++) {
+						if(items[j].pid == index) {
+							options.index = j;
+							break;
+						}
+					}
+				} else {
+					// in URL indexes start from 1
+					options.index = parseInt(index, 10) - 1;
+				}
+			} else {
+				options.index = parseInt(index, 10);
+			}
+
+			// exit if index not found
+			if( isNaN(options.index) ) {
+				return;
+			}
+
+			if(disableAnimation) {
+				options.showAnimationDuration = 0;
+			}
+
+			// Pass data to PhotoSwipe and initialize it
+			gallery = new PhotoSwipe( pswpElement, PhotoSwipeUI_Default, items, options);
+			gallery.init();
+		};
+
+		// loop through all gallery elements and bind events
+		var galleryElements = document.querySelectorAll( gallerySelector );
+
+		for(var i = 0, l = galleryElements.length; i < l; i++) {
+			galleryElements[i].setAttribute('data-pswp-uid', i+1);
+			galleryElements[i].onclick = onThumbnailsClick;
+		}
+
+		// Parse URL and open gallery if it contains #&pid=3&gid=1
+		var hashData = photoswipeParseHash();
+		if(hashData.pid && hashData.gid) {
+			openPhotoSwipe( hashData.pid ,  galleryElements[ hashData.gid - 1 ], true, true );
+		}
+	};
+
+// execute above function
+	initPhotoSwipeFromDOM('.photoswipe');
+}
+
+// 안정적인 포토스와이프 실행을 위해 img 로드 완료 상태를 체크
+function easeImagesLoadcheck() {
+
+	if (typeof requestAnimationFrame != 'function') {
+
+		// requestAnimationFrame 을 지원하지 않을 때
+
+		$(window).load(function () {
+
+			photoswipe();
+
+		});
+
+	}else {
+
+		// requestAnimationFrame 을 지원할 때
+
+		var contImg = document.querySelectorAll('img');
+		var contImgLen = contImg.length;
+
+		function contImgCompleted () {
+
+			var complete = 0;
+
+			for (var i=0; i<contImgLen; i++) {
+
+				if (contImg[i].complete) {
+
+					complete++;
+				}
+				else {
+
+					continue;
+				}
+			}
+
+			if (complete == contImgLen) {
+
+				photoswipe();
+
+				return cancelAnimationFrame(contImgCompleted);
+			}
+
+			return requestAnimationFrame(contImgCompleted);
+		};
+
+		contImgCompleted();
+	}
+}
+
+
+
+
+
+//레이어 팝업
+function openLayer (selector) {
+
+	var layer = document.querySelector(selector);
+	var layerHead = layer.querySelector('.layer_head');
+	var layerBody = layer.querySelector('.layer_body');
+
+	// 알맞은 여백만큼 수기 추가
+	var cnt = 150;
+
+	function editBodyHeight () {
+
+		// 초기화 후 계산되어야 한다
+		layerBody.style.height = 'auto';
+
+		var layerHeight = layer.clientHeight;
+		var layerHeadHeight = layerHead.clientHeight;
+
+		// 레이어 높이가 화면을 넘어가면
+		if (layerHeight-cnt < document.querySelector('.layer_wrap').clientHeight) {
+
+			layerBody.style.height = (layerHeight - layerHeadHeight - cnt-10) +'px';
+		}
+
+		return 1;
+	};
+
+	$(layer).fadeIn(300, 'easeOutCubic');
+
+	$(document).on('click', '#epeopleLayerClsoe', function (event) {
+
+		event.preventDefault();
+		fn_ytStop();
+		$(layer).fadeOut(300, 'easeOutCubic');
+
+		return 1;
+	});
+
+	$(selector).find('.black').on('click', function (event) {
+
+		$(layer).fadeOut(300, 'easeOutCubic');
+		fn_ytStop();
+		return 1;
+	});
+
+	function fn_ytStop() {
+        if ($('#player').length > 0 ) {
+            $('#player')[0].contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
+        }
+    }
+
+	$(window).resize(function () {
+
+		editBodyHeight();
+	});
+
+	if (navigator.userAgent.indexOf('Trident') != -1) {
+
+		editBodyHeight();
+
+		// 스크롤 추가
+		$('.layer_body').mCustomScrollbar();
+	}
+
+	if (typeof requestAnimationFrame == 'function') {
+
+		// requestAnimationFrame 을 지원할 때
+
+		var contImg = document.querySelectorAll(selector+' img');
+
+		var contImgLen = contImg.length;
+
+		(function contImgCompleted () {
+
+			var complete = 0;
+
+			for (var i=0; i<contImgLen; i++) {
+
+				if (contImg[i].complete) {
+
+					complete++;
+				}
+				else {
+
+					continue;
+				}
+			}
+
+			if (complete == contImgLen) {
+
+				editBodyHeight();
+
+				// 스크롤 추가
+				$('.layer_body').mCustomScrollbar();
+
+				return cancelAnimationFrame(contImgCompleted);
+			}
+
+			return requestAnimationFrame(contImgCompleted);
+		})();
+	}
+
+	return 1;
+};
+
+// 인수로 대상 위치를 받고, Ajax 로 문서의 내용을 받아서 콜백을 실행한다
+function runParse (url, element, callBack, _this, out) {
+
+	removeLayer();
+
+	if (_this != 'parent') {
+
+		window.setParentThis = _this;
+	}
+
+	var str = '';
+
+	var getHtml = $.get(url);
+	var id = $(window.setParentThis).attr('href');
+
+	getHtml.done(function (res) {
+
+		var str = '\n'+
+			'\n<div id="'+id.substr(1)+'" class="huyang_layer">'+
+			'\n\t<!-- 레이어팝업 내용이 달라붙는 태그 -->'+
+			'\n\t<div class="black"></div>'+
+			'\n\t<div class="layer_wrap">\n'+res+'</div>'+
+			'\n</div>';
+
+		// 현재 클릭한 대상 레이어가 생성되어 있지 않을 때
+        if (out) {
+
+            $('body').append(str);
+        }
+        else {
+
+            $(window.setParentThis).after(str);
+
+        }
+
+		if (_this == 'parent') {
+
+			window.setParentThis = undefined;
+		}
+
+		if (callBack) {
+
+			if ($.isArray(callBack)) {
+
+				for (var i=0; i<callBack.length; i++) {
+
+					callBack[i](id);
+				}
+			}
+			else {
+
+				callBack(id);
+			}
+		}
+	});
+
+	return 1;
+}
+
+function activePgSlideShow(id) {
+
+	$(id+' .pgwSlideshow').pgwSlideshow({
+		alt:false,
+		description:true
+	});
+
+	// 이미지 로드체크 후 run photoswipe
+	easeImagesLoadcheck();
+
+	return this;
+}
+
+function slideImagesGroup (id) {
+
+
+	console.log (id)
+
+	return this;
+}
+
+$(function () {
+
+	var btnSwitch = $('.btn_switch');
+
+	btnSwitch.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.hasClass('in_active')) {
+
+			t.removeClass('in_active');
+		}
+		else {
+
+			t.addClass('in_active');
+		}
+
+	});
+
+})
+
+//파일첨부
+$(document).ready(function(){
+	var fileTarget = $('.filebox .upload-hidden');
+
+	fileTarget.on('change', function(){
+
+		if(window.FileReader){
+			var filename = $(this)[0].files[0].name;
+		} else {
+			var filename = $(this).val().split('/').pop().split('\\').pop();
+		}
+
+		$(this).siblings('.file_name').text(filename);
+	});
+
+	//fn_drawList();
+});
+
+
+function calendarData(date) {
+	if( date ) {
+		date = date.split('-');
+		date[1] = date[1] - 1;
+		if(sctin != "01") {
+		    date = new Date(date[0], date[1]);
+		} else {
+		    date = new Date(date[0], '07', '01');
+		}
+	} else {
+		var date = new Date();
+	    if(sctin == "01") {
+	        date = new Date(date.getFullYear(), '06', '01');
+	    }
+	}
+	var currentYear = date.getFullYear();
+	//년도를 구함
+
+	var currentMonth = date.getMonth() + 1;
+	//연을 구함. 월은 0부터 시작하므로 +1, 12월은 11을 출력
+
+	var currentDate = date.getDate();
+	//오늘 일자.
+
+	date.setDate(1);
+
+	var currentDay = date.getDay();
+	//이번달 1일의 요일은 출력. 0은 일요일 6은 토요일
+
+	var lastDate = new Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31);
+
+	if( (currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0 ){
+
+		lastDate[1] = 29;
+	}
+	//각 달의 마지막 일을 계산, 윤년의 경우 년도가 4의 배수이고 100의 배수가 아닐 때 혹은 400의 배수일 때 2월달이 29일 임.
+
+	var currentLastDate = lastDate[currentMonth-1];
+	var week = Math.ceil( ( currentDay + currentLastDate ) / 7 );
+	//총 몇 주인지 구함.
+
+	if(currentMonth != 1) {
+
+		var prevDate = currentYear + '-' + ( currentMonth - 1 ) + '-' + currentDate;
+	}
+	else {
+
+		var prevDate = ( currentYear - 1 ) + '-' + 12 + '-' + currentDate;
+	}
+	//만약 이번달이 1월이라면 1년 전 12월로 출력.
+
+	if(currentMonth != 12){
+
+		var nextDate = currentYear + '-' + ( currentMonth + 1 ) + '-' + currentDate;
+	}
+	else {
+
+		var nextDate = ( currentYear + 1 ) + '-' + 1 + '-' + currentDate;
+	}
+	//만약 이번달이 12월이라면 1년 후 1월로 출력.
+
+	if( currentMonth < 10 ) {
+
+		var currentMonth = '0' + currentMonth;
+	}
+	//10월 이하라면 앞에 0을 붙여준다.
+
+	return {
+		prev: prevDate,
+		next: nextDate,
+		y: currentYear,
+		m: currentMonth,
+		d: currentDay,
+		last: currentLastDate,
+		week: week,
+	};
+}
+
+function calendarString(date, single) {
+	var data = calendarData(date);
+	var calendar = '';
+	var dateString = new Array('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
+	var dateStringKor = new Array('일', '월', '화', '수', '목', '금', '토');
+
+	calendar += '<div class="layer_cal_head">';
+	calendar += '	<div class="prevAnchorGroup">';
+	calendar += '   	<a href="#" class="prev" onclick="picker(\'' + data.prev + '\', \'prev\', false, '+ (single ? true : false) + ', sctin, hldtList, useDtList); return false;"><span class="hide">이전달</span></a>';
+	calendar += '		<a href="#" class="calSclBtn prevScroll" onclick="moCalWScroll(\'prev\'); return false;"><span>'+data.prev.split('-')[1]+'월</span></a>';
+	calendar += '	</div>';
+	calendar += '   <b>' + data.y + '. ' + data.m + '</b>';
+	calendar += '	<div class="nextAnchorGroup">';
+	calendar += '   	<a href="#" class="next" onclick="picker(\'' + data.next + '\', \'next\', false, '+ (single ? true : false) + ', sctin, hldtList, useDtList); return false;"><span class="hide">다음달</span></a>';
+	calendar += '		<a href="#" class="calSclBtn nextScroll" onclick="moCalWScroll(\'next\'); return false;"><span>'+data.next.split('-')[1]+'월</span></a>';
+	calendar += '	</div>';
+	calendar += '</div>';
+
+	calendar += '<table border="0" cellspacing="0" cellpadding="0">';
+	calendar += '   <caption>' + data.y + '년 ' + data.m + '월 달력</caption>';
+	calendar += '   <thead>';
+	calendar += '        <tr>';
+	calendar += '          <th class="sun" scope="row">일</th>';
+	calendar += '          <th class="mon" scope="row">월</th>';
+	calendar += '          <th class="tue" scope="row">화</th>';
+	calendar += '          <th class="wed" scope="row">수</th>';
+	calendar += '          <th class="thu" scope="row">목</th>';
+	calendar += '          <th class="fri" scope="row">금</th>';
+	calendar += '          <th class="sat" scope="row">토</th>';
+	calendar += '        </tr>';
+	calendar += '   </thead>';
+	calendar += '<tbody>';
+
+	var dateNum = 1 - data.d;
+	var endCnt = 0;
+
+	var date = window.calendarToDay;
+
+	var currentYear = date.getFullYear();
+	//년도를 구함
+
+	var currentMonth = date.getMonth() + 1;
+		currentMonth = currentMonth < 10 ? '0' + currentMonth : currentMonth;
+	//연을 구함. 월은 0부터 시작하므로 +1, 12월은 11을 출력
+
+	var currentDate = date.getDate();
+		currentDate = currentDate < 10 ? '0' + currentDate : currentDate;
+	//오늘 일자.
+
+	var curruntDay = currentYear+'/'+currentMonth+'/'+currentDate;
+
+	for(var i = 0; i < data.week; i++) {
+		calendar += '<tr>';
+		for(var j = 0; j < 7; j++, dateNum++) {
+			if( dateNum < 1 ) {
+			    if(single) {
+			        calendar += '<td class="not_day"><a href="#">' + (Number(calendarData(data.prev).last)+Number(dateNum)) + '</a></td>';
+			    } else {
+			        calendar += '<td class="not_day"></td>';
+			    }
+				continue;
+			}
+
+			if( dateNum > data.last ) {
+				//추가 선택가능 말일 ~ 다음달 초 예약 가능하게 하기 위해 다음달 1일을 선택가능하게 처리
+				var nextMonthFirstDayChk = dateNum - data.last;
+				if(nextMonthFirstDayChk == 1 && single) {
+					var nextNotDay = calendarData(data.next);
+					var printDay = nextNotDay.y+'/'+nextNotDay.m+'/01';
+
+					calendar += '<td class="true"><a '+function () {
+						var str = '';
+
+						if (new Date(printDay).getTime() >= new Date(curruntDay).getTime()) {
+						    if(useDtList != null && useDtList != '') {
+
+						        for(var k=0; k<useDtList.length; k++ ) {
+						            if( useDtList[k].schdlDt == (printDay.replace(/[^0-9]/g,"")) ) {
+		    				            str = 'data-date='+printDay+'('+dateStringKor[j]+')';
+		    				            break;
+						            } else {
+						                str = 'lang="ko" title="선택불가"';
+						            }
+						        }
+						    } else {
+						        str = 'data-date='+printDay+'('+dateStringKor[j]+')';
+						    }
+						} else {
+				            str = 'lang="ko" title="선택불가"';
+						}
+						return str;
+					}()+' href="#" name="'+ printDay + '('+dateStringKor[j]+')' +'" >' + (((data.last+j)-data.last+1)-(endCnt+1)) + function () {
+
+						var str = '';
+
+						if (printDay === curruntDay) {
+							//오늘 날짜 잘못 세팅함.
+							//str = '<div class="cal_today">오늘</div>';
+						}
+
+						return str;
+
+					}()+'</a></td>';
+				} else {
+				    if(single) {
+				        calendar += '<td class="not_day"><a href="#">' + (((data.last+j)-data.last+1)-(endCnt+1)) + '</a></td>';
+				    } else {
+				        calendar += '<td class="not_day"></td>';
+				    }
+				}
+				continue;
+			}
+			var printDay = data.y+'/'+data.m+'/'+(dateNum < 10 ? '0'+dateNum : dateNum );
+
+			calendar += '<td class="' + dateString[j] + '"><a '+function () {
+				var str = '';
+
+				if (new Date(printDay).getTime() >= new Date(curruntDay).getTime()) {
+				    if(useDtList != null && useDtList != '') {
+
+				        for(var k=0; k<useDtList.length; k++ ) {
+				            if( useDtList[k].schdlDt == (printDay.replace(/[^0-9]/g,"")) ) {
+    				            str = 'data-date='+printDay+'('+dateStringKor[j]+')';
+    				            break;
+				            } else {
+				                str = 'lang="ko"   title="선택불가"';
+				            }
+				        }
+				    } else {
+				        str = 'data-date='+printDay+'('+dateStringKor[j]+')';
+				    }
+				} else {
+		            str = 'lang="ko"   title="선택불가"';
+				}
+				return str;
+			}()+' href="#" name="'+ printDay + '('+dateStringKor[j]+')' +'" >' + dateNum + function () {
+
+				var str = '';
+
+				if (printDay === curruntDay) {
+					//오늘 날짜 잘못 세팅함.
+					//str = '<div class="cal_today">오늘</div>';
+				}
+
+				return str;
+
+			}()+'</a></td>';
+			endCnt = j;
+		}
+		calendar += '</tr>';
+	}
+
+	calendar += '</tbody>';
+	calendar += '</table>';
+	return calendar;
+}
+
+function picker(date, dir, write, single, sctin, arrHldt, useDtList) {
+	var calNum = 0
+	var str = '';
+	if (single) {
+		str = '<div class="layer_calender">' + calendarString(date, single, '', '', sctin, arrHldt) + '</div>';
+	} else {
+		while (calNum < 2) {
+			str += '<div class="layer_calender '+( calNum ? 'cal_right' : 'cal_left' )+'">' + function () {
+					var str = '';
+					if (calNum) {
+						str = calendarString(function () {
+							var str = calendarData(date).next;
+							if (dir == 'next') {
+								str = date;
+							}
+							return str;
+						}());
+					} else {
+						str = calendarString(function () {
+							var str = date;
+							if (dir == 'next') {
+								str = calendarData(date).prev;
+							}
+							return str;
+						}());
+					}
+					return str;
+				}()+'</div>';
+			calNum++;
+		}
+	}
+
+	if (write) {
+		document.write(str);
+	} else {
+		$('.calendar_wrap').html(str);
+	}
+	var arrHldtJSON = arrHldt;
+	if(arrHldtJSON != null && arrHldtJSON != '') {
+    	for (var k=0; k<arrHldtJSON.length; k++ ) {
+    		var arrHldtYear = arrHldtJSON[k].dt.substr(0, 4);
+    		var arrHldtMonth = arrHldtJSON[k].dt.substr(4, 2);
+    		var arrHldtDay = arrHldtJSON[k].dt.substr(6, 2);
+    		var getDataDate = $('.picker_layer .layer_calender table td a[data-date*="'+arrHldtYear+'/'+arrHldtMonth+'/'+arrHldtDay+'"]');
+    		if(arrHldtJSON[k].dtCd == '02'){
+    		    getDataDate.removeAttr('data-date').addClass('dtCd'+arrHldtJSON[k].dtCd).attr({ 'title': '예약불가능(주말/성수기추첨)' }).attr({ 'lang': 'ko' });
+    		    var tmpSpan = document.createElement('span');
+    		    tmpSpan.classList.add("hide");
+    		    var tmpText = document.createTextNode("선택불가 – 주말/성수기 추첨");
+    		    tmpSpan.appendChild(tmpText);
+    		    getDataDate.append(tmpSpan);
+    		}else{
+    		    getDataDate.removeAttr('data-date').addClass('dtCd'+arrHldtJSON[k].dtCd).attr({ 'title': arrHldtJSON[k].dtNm }).attr({ 'lang': 'ko' });
+    		    var tmpSpan = document.createElement('span');
+                            tmpSpan.classList.add("hide");
+                        var tmpText = document.createTextNode("선택불가 – 예약 불가능일자");
+                            tmpSpan.appendChild(tmpText);
+                            getDataDate.append(tmpSpan);
+    		}
+    	}
+	}
+	return 1;
+}
+
+function addPicker(_this, write, single, _sctin, _hldtList, mxmmStngDayCnt, _useDtList, toDay) {
+    var returnFocus = $(_this);
+    window.calendarToDay = new Date(toDay.split('-')[0], toDay.split('-')[1] - 1, toDay.split('-')[2]);
+
+    if($("#srchInsttArcd", "form[name='srch_frm']").val() == "" && $("#srchInsttId", "form[name='srch_frm']").val() == "") {
+        alert("지역을 먼저 선택 해 주시기 바랍니다."+_no_click_msg);
+        $('#calPicker').blur();
+        //$("#keyword", "form[name='srch_frm']").focus();
+        return false;
+    }
+
+    sctin     = _sctin;
+    hldtList  = _hldtList;
+    useDtList = _useDtList;
+
+    var onPicker = function () {
+        $('.picker_layer').css('opacity', 0);
+
+        $('#forestCalPicker').fadeIn(300, 'easeOutCubic', function () {
+
+            $('.picker_layer').css({
+
+                position: 'absolute',
+                top: function () {
+                    var mt = '50%';
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '50px';
+                    }
+                    return mt;
+                }(),
+                left: '50%',
+                marginTop: function () {
+
+                    var mt = $('.picker_layer')[0].clientHeight/2*-1;
+
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '0';
+                    }
+                    return mt;
+                }(),
+                marginLeft: $('.picker_layer')[0].clientWidth/2*-1,
+                opacity: 1
+            }).fadeIn(300);
+
+
+        });
+
+        $('.picker_layer').focus();
+    }
+
+    var offPicker = function () {
+        $('#forestCalPicker').remove();
+        $('.picker_back').remove();
+    }
+
+    if ($('#forestCalPicker').length) {
+        offPicker();
+    }
+
+    var str = ''+
+        '<div id="forestCalPicker" style="z-index:10000;position:absolute;top:0;left:0;width:100%;height:100%;display:none">'+
+        '<div tabindex="0" class="picker_layer '+ ( single ? 'single' : '' ) +'">'+
+            '<a class="layer_close" href="#"><span class="sprity-cal sprity-cal-cal_picker_close"></span><span class="hide">달력 닫기</span></a>'+
+            '<div class="scl"><div class="scl_wrap"><div class="calendar_wrap"></div></div></div>';
+        if(mxmmStngDayCnt != '' && mxmmStngDayCnt != null && browerCheck == '') {
+        str +=  '<div class="cal_regend">'+
+                '<b>범례</b>'+
+                '<div class="rg_group">'+
+                    '<div><i class="rg_1"><span class="hide">무색</span></i> 선택불가 - 예약 불가능일자</div>'+
+                    '<div><i class="rg_2"><span class="hide">황색</span></i> 선택가능 - 선택 가능일자</div>'+
+                    '<div><i class="rg_3"><span class="hide">회색</span></i> 선택불가 - 주말/성수기 추첨</div>'+
+                '</div>'+
+            '</div>';
+        }
+        str += '<div class="cal_regend">'+
+                '날짜를 클릭하고 <span style="color:red">조회하면 예약가능 날짜와 잔여객실을 확인</span>할 수 있습니다.'+
+        '</div>';
+        str +=
+            '<div class="cal_button">'+
+                '<p id="calPrintDate"></p>'+
+                '<a href="#" class="defBtn board">확인</a>'+
+            '</div>'+
+        '</div>';
+
+    $('body').append(str+'<div class="picker_back" style="z-index:200;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.6)"></div>');
+
+    picker(toDay, 0, write, single, sctin, hldtList, _useDtList);
+
+    if (_this) {
+        var t = $(_this);
+        onPicker();
+    }
+
+    var today = new Date(toDay.split('-')[0], toDay.split('-')[1] -1, toDay.split('-')[2]);
+    var dateSTring = '';
+    var currentDate = today.getFullYear()+'/'+(today.getMonth()+1 < 10 ? '0'+(today.getMonth()+1) : today.getMonth()+1 )+'/'+(today.getDate() < 10 ? '0'+today.getDate() : today.getDate());
+    var checkerArr;
+
+    $('.cal_button a').on('click', function (event) {
+        event.preventDefault();
+
+        // 입실일, 퇴실일 모두 선택되었는지 확인
+        if(checkerArr == undefined || !(checkerArr[0] >=0 && checkerArr[1] >=0)) {
+            alert("입실일, 퇴실일을 선택 해주세요."+_no_click_msg);
+        }
+       /*
+        if (inputListLabel.state && inputListLabel.label.next().val().length == 0) {
+            alert('예약일을 선택 해주세요.');
+        }
+        */
+        else {
+            $('.picker_back').fadeOut(300, 'easeOutCubic');
+            $('#forestCalPicker').fadeOut(300, 'easeOutCubic');
+            //alert(returnFocus.attr('id'));
+            if(returnFocus.attr('id') == 'finalSearchBtn') {
+                returnFocus.click();
+            }else{
+                returnFocus.focus();
+            }
+            // 달력 선택 - 휴양림의 선택된 숙박기간에 이용가능한 상품이 있는지 자동 조회 (2019.06.27)
+            /*
+            if($("#rsrvtPssblYn", "form[name='srch_frm']").length > 0) {
+                fn_top_goSearch();
+            } else {
+                if($("#goodsClsscHouseCdArr", "form[name='srch_frm']").length > 0) {
+                    fn_goRsvt();
+                } else {
+                    goSearch();
+                }
+            }
+            */
+        }
+    });
+
+    $('.picker_back, .picker_layer .layer_close').on('click', function (event) {
+
+        event.preventDefault();
+
+        $('.picker_back').fadeOut(300, 'easeOutCubic');
+        $('#forestCalPicker').fadeOut(300, 'easeOutCubic');
+
+        inputListLabel.input.val('');
+
+        //inputListLabel.state = false;
+
+        if (inputListLabel.state && inputListLabel.label.next().val().length == 0) {
+            inputListLabel.label.show();
+        }
+        //inputListLabel.input.val('');
+        $('#rsrvtBgDt').val('');
+        $('#rsrvtEdDt').val('');
+
+        offPicker();
+
+        returnFocus.focus();
+
+    });
+
+    $(document).off('.picker').on('click.picker', '.picker_layer td a', function (event) {
+        var checker = $('.picker_layer td a');
+        var checkerLen = checker.length;
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin_hol')) {
+                checker.eq(i).removeClass('origin_hol');
+            }
+        }
+
+        checker.find('.cal_txt').remove();
+
+        event.preventDefault();
+        var t = $(this);
+        var checker = $('.picker_layer td a');
+        var idx = checker.index(t);
+        var onDate = t.data('date');
+
+        if (!onDate) {
+            var checkerLen = checker.length;
+            var originCnt = 0;
+            var impssCnt = 0;
+            if(checkerLen > 0) {
+                for (var i=0; i<checkerLen; i++) {
+                    if(checker.eq(i).hasClass('origin')) {
+
+                        originCnt +=1;
+                        onDate = checker.eq(idx).attr('name');
+                    }
+                }
+                if(originCnt < 1) {
+                    return alert('선택 가능 일자가 아닙니다'+_no_click_msg);
+                } else {
+                    if ( checkerArr.length == 1 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0]< idx) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=idx; ii<=checkerArr[0]; ii++) {
+                                //console.log(checker.eq(ii).attr('lang'));
+                                //console.log(!checker.eq(ii).parent().hasClass('not_day'));
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0]) {
+                            impssCnt +=1;
+                        }
+                        if(impssCnt > 1) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            //시작지점보다 이전 날짜(선택불가한)를 선택하였을때 for문에서 체크 못하기 때문에 삭제 처리
+                            checker.eq(checkerArr[0]).removeClass('origin');
+                            checker.eq(checkerArr[0]).removeClass('child');
+                            checker.eq(checkerArr[0]).removeAttr('title');
+                            return alert('선택 가능 일자가 아닙니다.'+_no_click_msg);
+                        }
+                    } else if ( checkerArr.length == 2 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0] < checkerArr[1]) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=checkerArr[1]; ii<=checkerArr[0]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0] || idx < checkerArr[1]) {
+                            impssCnt +=1;
+                        }
+                        //선택가능 영역 2개 클릭 후 불가 영역 클릭시 체크 되는 현상 수정 위해 주석처리
+                        //if(impssCnt > 0) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            return alert('선택 가능 일자가 아닙니다.'+_no_click_msg);
+                        //}
+                    } else {
+                        console.log('exception');
+                    }
+                }
+            }
+            if(t.parent().attr('class') != 'not_day') {
+                t.addClass('origin_hol');
+            }
+        }
+
+        var date = new Date();
+        if(!t.parent().attr('class') == 'not_day') {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('.')[0]);
+            var month = Number(getDate.split('.')[1]);
+            var day = Number(getDate.split('.')[2]);
+            date.setFullYear(year, month-1, day);
+        }
+
+        if (!t.hasClass('origin') && onDate) {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('/')[0]);
+            var month = Number(getDate.split('/')[1]);
+            var day = Number(getDate.split('/')[2]);
+            date.setFullYear(year, month-1, day);
+            if (date.getTime() < today.getTime()) {
+                return alert('금일('+currentDate+') 포함, 이후로 선택 가능합니다.'+_no_click_msg);
+            }
+
+            if (!t.parent().hasClass('not_day')) {
+                if(checkerArr) {
+                    //2개 모두 찍혀있고 다른 영역 선택했을 때 리셋
+                    if (checkerArr[1]) {
+                        checker.eq(checkerArr[0]).removeClass('origin');
+                        checker.eq(checkerArr[1]).removeClass('origin');
+                        checker.eq(checkerArr[0]).removeAttr('title');
+                        checker.eq(checkerArr[1]).removeAttr('title');
+                        checker.removeClass('child');
+                        checker.removeAttr('title');
+                    }
+                    //1개(시작점) 찍혀있고 새로 찍는 날짜가 그 이전 날짜일 경우 시작점 변경
+                    if (checkerArr[0]) {
+                        var ar0 = checker.eq(checkerArr[0]).data('date');
+                        if(ar0 != undefined) {
+                            var ar0Date = new Date();
+                            getDate = ar0.substr(0, ar0.lastIndexOf('('));
+                            year = Number(getDate.split('/')[0]);
+                            month = Number(getDate.split('/')[1]);
+                            day = Number(getDate.split('/')[2]);
+                            ar0Date.setFullYear(year, month-1, day);
+
+                            var curDate = new Date();
+                            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+                            var year = Number(getDate.split('/')[0]);
+                            var month = Number(getDate.split('/')[1]);
+                            var day = Number(getDate.split('/')[2]);
+                            curDate.setFullYear(year, month-1, day);
+
+                            if(curDate.getTime() < ar0Date.getTime()) {
+                                checker.eq(checkerArr[0]).removeClass('origin');
+                                checker.eq(checkerArr[0]).removeAttr('title');
+                            }
+                            checker.removeClass('child');
+                        }
+                    }
+                }
+                t.addClass('origin');
+                t.attr('title','선택됨');
+            }
+        } else {
+            t.removeClass('origin');
+            t.removeAttr('title');
+            checker.removeClass('child');
+            checker.removeAttr('title');
+            $('#'+$(_this).attr('id')).val('');
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().show()
+            }
+        }
+
+        var checkerLen = checker.length;
+        checkerArr = [];
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin')) {
+                checkerArr.push(i);
+            }
+        }
+
+        if ( checkerArr.length == 2 ) {
+            for (var j=0; j<checkerLen; j++) {
+                if (j == checkerArr[1]) {
+                    break;
+                }
+                if (j > checkerArr[0]) {
+                    if (checker.eq(j).parent().hasClass('not_day')) {
+                        continue;
+                    }
+                    checker.eq(j).addClass('child');
+                    checker.eq(j).attr('title','선택됨');
+                } else {
+                    continue;
+                }
+            }
+            // 휴일이 중간에 걸려있는지 판단
+            //console.warn(checker);
+            var pssblYn = true;
+            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                var lang = checker.eq(ii).attr('lang');
+                var clss = checker.eq(ii).attr('class');
+                if (lang && clss) {
+                    var onDate = $(this).data('date');
+                    if(onDate) {
+                        pssblYn = false;
+                        break;
+                    }
+                }
+            }
+            if(!pssblYn) {
+                for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                    checker.eq(ii).removeClass('origin');
+                    checker.eq(ii).removeClass('child');
+                    checker.eq(ii).removeAttr('title');
+                }
+                alert("선택 가능 일자가 아닙니다."+_no_click_msg);
+                return false;
+            }
+
+            // 선택일 일수 판단
+            if(mxmmStngDayCnt != '' && mxmmStngDayCnt != null) {
+                var dayLen = $('.picker_layer').find('.origin').length + $('.picker_layer').find('.child').length;
+                if (dayLen > (mxmmStngDayCnt+1)) {
+                    checker.removeClass('origin').removeClass('child');
+                    checker.removeClass('origin').removeAttr('title');
+                    inputListLabel.input.val('');
+                    return alert("이용일은 " + mxmmStngDayCnt + "박 " + (Number(mxmmStngDayCnt)+Number(1)) + "일까지만 가능합니다."+_no_click_msg);
+                }
+            }
+
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().hide();
+            }
+
+            $('#'+$(_this).attr('id')).val( checker.eq(checkerArr[0]).attr('name').substr(2) +' - '+ checker.eq(checkerArr[1]).attr('name').substr(2) );
+            $('#rsrvtBgDt').val(checker.eq(checkerArr[0]).attr('name').replace(/[^0-9]/g,""));
+            $('#rsrvtEdDt').val(checker.eq(checkerArr[1]).attr('name').replace(/[^0-9]/g,""));
+        }
+
+        $('#calPrintDate').html((checkerArr[0] >= 0 ? checker.eq(checkerArr[0]).attr('name') : '') + (checkerArr[1] >= 0 ? ' ~ '+checker.eq(checkerArr[1]).attr('name') : ''));
+
+        if (!checker.eq(checkerArr[0]).find('.cal_txt').length) {
+            checker.eq(checkerArr[0]).append('<div class="cal_txt">입실일</div>');
+        }
+
+        if (!checker.eq(checkerArr[1]).find('.cal_txt').length) {
+            checker.eq(checkerArr[1]).append('<div class="cal_txt">퇴실일</div>')
+        }
+    });
+
+    return false;
+}
+
+function addPickerBranch(_this, write, single, _sctin, _hldtList, mxmmStngDayCnt, _useDtList, toDay, _flag) {
+    var returnFocus = $(_this);
+    window.calendarToDay = new Date(toDay.split('-')[0], toDay.split('-')[1] - 1, toDay.split('-')[2]);
+
+    sctin     = _sctin;
+    hldtList  = _hldtList;
+    useDtList = _useDtList;
+
+    var onPicker = function () {
+        $('.picker_layer').css('opacity', 0);
+
+        $('#forestCalPicker').fadeIn(300, 'easeOutCubic', function () {
+
+            $('.picker_layer').css({
+
+                position: 'absolute',
+                top: function () {
+                    var mt = '50%';
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '50px';
+                    }
+                    return mt;
+                }(),
+                left: '50%',
+                marginTop: function () {
+
+                    var mt = $('.picker_layer')[0].clientHeight/2*-1;
+
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '0';
+                    }
+                    return mt;
+                }(),
+                marginLeft: $('.picker_layer')[0].clientWidth/2*-1,
+                opacity: 1
+            }).fadeIn(300);
+
+
+        });
+
+        $('.picker_layer').focus();
+    }
+
+    var offPicker = function () {
+        $('#forestCalPicker').remove();
+        $('.picker_back').remove();
+    }
+
+    if ($('#forestCalPicker').length) {
+        offPicker();
+    }
+
+    var str = ''+
+        '<div id="forestCalPicker" style="z-index:10000;position:absolute;top:0;left:0;width:100%;height:100%;display:none">'+
+        '<div tabindex="0" class="picker_layer '+ ( single ? 'single' : '' ) +'">'+
+            '<a class="layer_close" href="#"><span class="sprity-cal sprity-cal-cal_picker_close"></span><span class="hide">달력 닫기</span></a>'+
+            '<div class="scl"><div class="scl_wrap"><div class="calendar_wrap"></div></div></div>';
+        if(mxmmStngDayCnt != '' && mxmmStngDayCnt != null && browerCheck == '') {
+        str +=  '<div class="cal_regend">'+
+                '<b>범례</b>'+
+                '<div class="rg_group">'+
+                    '<div><i class="rg_1"><span class="hide">무색</span></i> 선택불가 - 예약 불가능일자</div>'+
+                    '<div><i class="rg_2"><span class="hide">황색</span></i> 선택가능 - 선택 가능일자</div>'+
+                    '<div><i class="rg_3"><span class="hide">회색</span></i> 선택불가 - 주말/성수기 추첨</div>'+
+                '</div>'+
+            '</div>';
+        }
+        str += '<div class="cal_regend">'+
+                '날짜를 클릭하고 <span style="color:red">조회하면 예약가능 날짜와 잔여객실을 확인</span>할 수 있습니다.'+
+        '</div>';
+        str +=
+            '<div class="cal_button">'+
+                '<p id="calPrintDate"></p>'+
+                '<a href="#" class="defBtn board">확인</a>'+
+            '</div>'+
+        '</div>';
+
+    $('body').append(str+'<div class="picker_back" style="z-index:200;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.6)"></div>');
+
+    picker(toDay, 0, write, single, sctin, hldtList, _useDtList);
+
+    if (_this) {
+        var t = $(_this);
+        onPicker();
+    }
+
+    var today = new Date(toDay.split('-')[0], toDay.split('-')[1] -1, toDay.split('-')[2]);
+    var dateSTring = '';
+    var currentDate = today.getFullYear()+'/'+(today.getMonth()+1 < 10 ? '0'+(today.getMonth()+1) : today.getMonth()+1 )+'/'+(today.getDate() < 10 ? '0'+today.getDate() : today.getDate());
+    var checkerArr;
+
+    $('.cal_button a').on('click', function (event) {
+        event.preventDefault();
+
+        // 입실일, 퇴실일 모두 선택되었는지 확인
+        if(!(checkerArr[0] >=0 && checkerArr[1] >=0)) {
+            alert("입실일, 퇴실일을 선택 해주세요."+_no_click_msg);
+        } else {
+            $('.picker_back').fadeOut(300, 'easeOutCubic');
+            $('#forestCalPicker').fadeOut(300, 'easeOutCubic');
+            returnFocus.focus();
+            fn_moveRsvrtTheme(_flag);
+        }
+    });
+
+    $('.picker_back, .picker_layer .layer_close').on('click', function (event) {
+
+        event.preventDefault();
+        $('.picker_back').fadeOut(300, 'easeOutCubic');
+        $('#forestCalPicker').fadeOut(300, 'easeOutCubic');
+
+        $("#srchInsttArcd", "form[name='srch_frm']").val('');
+        $("#srchInsttId", "form[name='srch_frm']").val('');
+        $("#keyword", "form[name='srch_frm']").val('');
+        $("#calPicker", "form[name='srch_frm']").val('');
+        $("#srchWord", "form[name='srch_frm']").val('');
+        $("#srchUseDt", "form[name='srch_frm']").val('');
+        $('#rsrvtBgDt').val('');
+        $('#rsrvtEdDt').val('');
+
+        var btn = $('#calPicker');
+        btn.prev().show();
+
+        var btn = $('.yeyakSearchName');
+        btn.focus().parent().removeClass('ov');
+        $(".preview_locatey").html("");
+
+        offPicker();
+
+        returnFocus.focus();
+
+    });
+
+    $(document).off('.picker').on('click.picker', '.picker_layer td a', function (event) {
+        var checker = $('.picker_layer td a');
+        var checkerLen = checker.length;
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin_hol')) {
+                checker.eq(i).removeClass('origin_hol');
+            }
+        }
+
+        checker.find('.cal_txt').remove();
+
+        event.preventDefault();
+        var t = $(this);
+        var checker = $('.picker_layer td a');
+        var idx = checker.index(t);
+        var onDate = t.data('date');
+
+        if (!onDate) {
+            var checkerLen = checker.length;
+            var originCnt = 0;
+            var impssCnt = 0;
+            if(checkerLen > 0) {
+                for (var i=0; i<checkerLen; i++) {
+                    if(checker.eq(i).hasClass('origin')) {
+
+                        originCnt +=1;
+                        onDate = checker.eq(idx).attr('name');
+                    }
+                }
+                if(originCnt < 1) {
+                    return alert('선택 가능 일자가 아닙니다'+_no_click_msg);
+                } else {
+                    if ( checkerArr.length == 1 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0]< idx) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=idx; ii<=checkerArr[0]; ii++) {
+                                //console.log(checker.eq(ii).attr('lang'));
+                                //console.log(!checker.eq(ii).parent().hasClass('not_day'));
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0]) {
+                            impssCnt +=1;
+                        }
+                        if(impssCnt > 1) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            //시작지점보다 이전 날짜(선택불가한)를 선택하였을때 for문에서 체크 못하기 때문에 삭제 처리
+                            checker.eq(checkerArr[0]).removeClass('origin');
+                            checker.eq(checkerArr[0]).removeClass('child');
+                            checker.eq(checkerArr[0]).removeAttr('title');
+                            return alert('선택 가능 일자가 아닙니다.'+_no_click_msg);
+                        }
+                    } else if ( checkerArr.length == 2 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0] < checkerArr[1]) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=checkerArr[1]; ii<=checkerArr[0]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0] || idx < checkerArr[1]) {
+                            impssCnt +=1;
+                        }
+                        //선택가능 영역 2개 클릭 후 불가 영역 클릭시 체크 되는 현상 수정 위해 주석처리
+                        //if(impssCnt > 0) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            return alert('선택 가능 일자가 아닙니다.'+_no_click_msg);
+                        //}
+                    } else {
+                        console.log('exception');
+                    }
+                }
+            }
+            if(t.parent().attr('class') != 'not_day') {
+                t.addClass('origin_hol');
+            }
+        }
+
+        var date = new Date();
+        if(!t.parent().attr('class') == 'not_day') {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('.')[0]);
+            var month = Number(getDate.split('.')[1]);
+            var day = Number(getDate.split('.')[2]);
+            date.setFullYear(year, month-1, day);
+        }
+
+        if (!t.hasClass('origin') && onDate) {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('/')[0]);
+            var month = Number(getDate.split('/')[1]);
+            var day = Number(getDate.split('/')[2]);
+            date.setFullYear(year, month-1, day);
+            if (date.getTime() < today.getTime()) {
+                return alert('금일('+currentDate+') 포함, 이후로 선택 가능합니다.'+_no_click_msg);
+            }
+
+            if (!t.parent().hasClass('not_day')) {
+                if(checkerArr) {
+                    //2개 모두 찍혀있고 다른 영역 선택했을 때 리셋
+                    if (checkerArr[1]) {
+                        checker.eq(checkerArr[0]).removeClass('origin');
+                        checker.eq(checkerArr[1]).removeClass('origin');
+                        checker.eq(checkerArr[0]).removeAttr('title');
+                        checker.eq(checkerArr[1]).removeAttr('title');
+                        checker.removeClass('child');
+                        checker.removeAttr('title');
+                    }
+                    //1개(시작점) 찍혀있고 새로 찍는 날짜가 그 이전 날짜일 경우 시작점 변경
+                    if (checkerArr[0]) {
+                        var ar0 = checker.eq(checkerArr[0]).data('date');
+                        if(ar0 != undefined) {
+                            var ar0Date = new Date();
+                            getDate = ar0.substr(0, ar0.lastIndexOf('('));
+                            year = Number(getDate.split('/')[0]);
+                            month = Number(getDate.split('/')[1]);
+                            day = Number(getDate.split('/')[2]);
+                            ar0Date.setFullYear(year, month-1, day);
+
+                            var curDate = new Date();
+                            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+                            var year = Number(getDate.split('/')[0]);
+                            var month = Number(getDate.split('/')[1]);
+                            var day = Number(getDate.split('/')[2]);
+                            curDate.setFullYear(year, month-1, day);
+
+                            if(curDate.getTime() < ar0Date.getTime()) {
+                                checker.eq(checkerArr[0]).removeClass('origin');
+                                checker.eq(checkerArr[0]).removeAttr('title');
+                            }
+                            checker.removeClass('child');
+                        }
+                    }
+                }
+                t.addClass('origin');
+                t.attr('title','선택됨');
+            }
+        } else {
+            t.removeClass('origin');
+            t.removeAttr('title');
+            checker.removeClass('child');
+            checker.removeAttr('title');
+            $('#'+$(_this).attr('id')).val('');
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().show()
+            }
+        }
+
+        var checkerLen = checker.length;
+        checkerArr = [];
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin')) {
+                checkerArr.push(i);
+            }
+        }
+
+        if ( checkerArr.length == 2 ) {
+            for (var j=0; j<checkerLen; j++) {
+                if (j == checkerArr[1]) {
+                    break;
+                }
+                if (j > checkerArr[0]) {
+                    if (checker.eq(j).parent().hasClass('not_day')) {
+                        continue;
+                    }
+                    checker.eq(j).addClass('child');
+                    checker.eq(j).attr('title','선택됨');
+                } else {
+                    continue;
+                }
+            }
+            // 휴일이 중간에 걸려있는지 판단
+            //console.warn(checker);
+            var pssblYn = true;
+            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                var lang = checker.eq(ii).attr('lang');
+                var clss = checker.eq(ii).attr('class');
+                if (lang && clss) {
+                    var onDate = $(this).data('date');
+                    if(onDate) {
+                        pssblYn = false;
+                        break;
+                    }
+                }
+            }
+            if(!pssblYn) {
+                for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                    checker.eq(ii).removeClass('origin');
+                    checker.eq(ii).removeClass('child');
+                    checker.eq(ii).removeAttr('title');
+                }
+                alert("선택 가능 일자가 아닙니다."+_no_click_msg);
+                return false;
+            }
+
+            // 선택일 일수 판단
+            if(mxmmStngDayCnt != '' && mxmmStngDayCnt != null) {
+                var dayLen = $('.picker_layer').find('.origin').length + $('.picker_layer').find('.child').length;
+                if (dayLen > (mxmmStngDayCnt+1)) {
+                    checker.removeClass('origin').removeClass('child');
+                    checker.removeClass('origin').removeAttr('title');
+                    inputListLabel.input.val('');
+                    return alert("이용일은 " + mxmmStngDayCnt + "박 " + (Number(mxmmStngDayCnt)+Number(1)) + "일까지만 가능합니다."+_no_click_msg);
+                }
+            }
+
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().hide();
+            }
+
+            $('#'+$(_this).attr('id')).val( checker.eq(checkerArr[0]).attr('name').substr(2) +' - '+ checker.eq(checkerArr[1]).attr('name').substr(2) );
+            $('#rsrvtBgDt').val(checker.eq(checkerArr[0]).attr('name').replace(/[^0-9]/g,""));
+            $('#rsrvtEdDt').val(checker.eq(checkerArr[1]).attr('name').replace(/[^0-9]/g,""));
+        }
+
+        $('#calPrintDate').html((checkerArr[0] >= 0 ? checker.eq(checkerArr[0]).attr('name') : '') + (checkerArr[1] >= 0 ? ' ~ '+checker.eq(checkerArr[1]).attr('name') : ''));
+
+        if (!checker.eq(checkerArr[0]).find('.cal_txt').length) {
+            checker.eq(checkerArr[0]).append('<div class="cal_txt">입실일</div>');
+        }
+
+        if (!checker.eq(checkerArr[1]).find('.cal_txt').length) {
+            checker.eq(checkerArr[1]).append('<div class="cal_txt">퇴실일</div>')
+        }
+    });
+
+    return false;
+}
+
+function rmPicker() {
+
+	if ($('.picker_layer').length) {
+
+		if (!$('#cateCalendar').length) {
+
+			$('.picker_layer').hide();
+			$('.picker_back').hide();
+		}
+	}
+}
+
+
+function resDetail() {
+	//예약목록 버튼 클릭시 상세 정보 show/hide
+	var resBtn = $(".res_List .resL_right>ul>li>a");
+
+	resBtn.on("click",function () {
+		if($(this).closest(".resL_li").next(".resDetail").is(":hidden")){
+			$(this).closest(".resL_li").next(".resDetail").slideDown(300, 'easeOutCubic');
+		}else{
+			$(this).closest(".resL_li").next(".resDetail").slideUp(300, 'easeOutCubic');
+		}
+		return false;
+	});
+}
+
+function resPossible() {
+	var resBtn = $(".resGo_btn");
+
+	resBtn.on("click",function () {
+		if($(this).closest("div").next(".resPosBox").is(":hidden")){
+			$(this).closest("div").next(".resPosBox").slideDown(300, 'easeOutCubic');
+		}else{
+			$(this).closest("div").next(".resPosBox").slideUp(300, 'easeOutCubic');
+		}
+		return false;
+	});
+}
+
+function agrCon() {
+	//약관내용보기
+	var agrBtn = $(".agrBtn");
+	var closeBtn = $(".L_closeBtn");
+
+	agrBtn.on("click",function () {
+		if($(this).next(".agr_cont").is(":hidden")){
+			$(this).addClass("on");
+			$(this).next(".agr_cont").slideDown(300, 'easeOutCubic');
+		}else{
+			$(this).removeClass("on");
+			$(this).next(".agr_cont").slideUp(300, 'easeOutCubic');
+		}
+		return false;
+	});
+
+	closeBtn.on("click",function () {
+		$(this).closest(".agr_cont").slideUp(300, 'easeOutCubic');
+		return false;
+	});
+
+}
+
+function tableResponsed() {
+
+	// 일반 표 반응형
+
+	var parent = $('.res_bbs_wrap');
+	var parentLen = parent.length;
+
+	if (!parentLen) {
+
+		return false;
+	}
+
+	for (var z=0; z<parentLen; z++) {
+
+		var theadTh = parent.eq(z).find('.tbl thead th, .tbl_board thead th');
+		var theadThLen = theadTh.length;
+
+		var tbodyTr = parent.eq(z).find('.tbl tbody tr, .tbl_board tbody tr');
+		var tbodyTrLen = tbodyTr.length;
+
+		var tiArr = [];
+
+		var str = '';
+
+		var useAllCheck = false;
+		var useAllCheckStr = '';
+
+		for (var i=0; i<theadThLen; i++) {
+
+			tiArr.push(theadTh.eq(i).html());
+		}
+
+		for (var j=0; j<tbodyTrLen; j++) {
+
+			var childTd = tbodyTr.eq(j).children();
+			var childTdLen = childTd.length;
+
+			var strItem = '';
+
+			// tr
+			strItem += ''+
+				'\n<li class="item item_'+j+'">';
+
+			for (var k=0; k<childTdLen; k++) {
+
+				// th, td
+
+				// 전체목록 선택 삭제 용도의 선택 상자를 사용하는지
+				var useCheck = childTd.eq(k).find('[type=checkbox]').length;
+
+				if (useCheck) {
+
+					// 선택 상자를 사용 하는것이 판단되면 true 일때 만
+					// 화면에 전체선택상자 추가 유무를 판단하기 위함
+					useAllCheck = true;
+					// 전체 선택에 사용되는 html만 저장
+					useAllCheckStr = tiArr[k];
+				}
+
+				var strTitle = useCheck ? ''  : '<b>'+tiArr[k]+'</b>';
+
+				var sumStrings = '\n<div class="child_'+k+' '+ ( useCheck ? 'check' : '' ) +'">'+strTitle+childTd.eq(k).html()+'</div>';
+
+				strItem += sumStrings;
+			}
+
+			strItem += ''+
+				'\n</li>';
+
+			// tr 한개에 해당하는 목록 저장
+			str += strItem;
+		}
+
+		parent.eq(z).append('\n<div class="tbl_responsed">'+(useAllCheck ? '<div class="use_all_checkbox"><label for="checkAll">'+useAllCheckStr+' 전체 선택</label></div>' : '')+'<ul>'+str+'</ul></div>');
+	}
+
+	// 전체 선택에 대한 요소가 있으면 mo/pc 간 선택 상태를 동기화 시키는 스크립트를 부른다.
+	//return useAllCheck ? syncCheckbox() : 1;
+}
+
+function resSch_List(id) {
+	var item = $(id);
+
+	$(".none").stop(0, 1).slideUp(300, 'easeOutCubic');
+
+	item.slideDown(300, 'easeOutCubic',function () {
+		var box_position = item.position();
+		$('html, body').stop(0, 1).animate({ scrollTop : box_position.top - 120 }, 1000, 'easeOutExpo');
+	});
+
+	return false;
+}
+
+function placeholderLabel() {
+
+    var inputListLabel = $('.input label');
+    var inputListLabelLen = inputListLabel.length;
+
+    // 비우기
+    for (i=0; i<inputListLabelLen; i++) {
+        var forid = inputListLabel[i].getAttribute("for");
+        if(forid != "g_search"){
+            $(inputListLabel[i]).next().val('');
+        }
+    }
+
+    inputListLabel.on('click', function (event) {
+
+        var t = $(this);
+
+        var t_input = inputListLabel.next();
+
+        t.hide();
+    });
+
+    inputListLabel.next().on('focusin focusout', function (event) {
+
+        var t = $(this);
+
+        var t_label = t.prev();
+
+        if (event.handleObj.type == 'focusin') {
+
+            window.inputListLabel = { state: true, label: t_label, input: t };
+
+            t_label.hide();
+        }
+
+        if (event.handleObj.type == 'focusout') {
+
+            if (!t.val().length) {
+
+                if ($('.picker_layer').is(':visible')) {
+
+
+                }else {
+
+                    window.inputListLabel.state = false;
+                    window.inputListLabel.label = null;
+
+                    t_label.show();
+                }
+            }
+        }
+    });
+
+    return 1;
+}
+
+function fasterAptRes() {
+
+	var parent_left = $('.fast_list .list_left');
+
+
+	function addEvent() {
+
+		parent_left.find('ul>li>a').on('click.off', function (event) {
+
+			event.preventDefault();
+
+			var t = $(this);
+
+			var idx = parent_left.find('ul>li>a').index(t);
+
+			$('.fast_list .list_right').remove();
+
+			parent_left.find('ul>li>a').removeClass('in_active');
+
+			t.after(window.FasterAptResString).addClass('in_active');
+
+			var tr = $('.fast_list .list_right tbody tr');
+			var trLen = tr.length;
+
+			for (var i=0; i<trLen; i++) {
+
+				if (i != idx) {
+
+					tr.eq(i).remove();
+				}
+			}
+
+		});
+
+		return 1;
+	}
+
+	if (!window.FasterAptResString) {
+
+		window.FasterAptResString = '<div class="list_right">'+$('.fast_list .list_right').html()+'</div>';
+
+		$('.fast_list .list_right').remove();
+
+		addEvent();
+	}
+
+	if (document.body.clientWidth >= 640) {
+
+		$('.fast_list .list_right').remove();
+
+		parent_left.after(window.FasterAptResString);
+
+		parent_left.find('ul>li>a').off('.off');
+
+		$('.fast_list .list_right').mCustomScrollbar({
+			axis:"x" // horizontal scrollbar
+		});
+	}
+	else {
+
+		addEvent();
+
+		$('.fast_list .list_right').remove();
+	}
+}
+
+function showhide(_this, i) {
+
+	if ($(i).css('display') == 'none') {
+
+		$(i).slideDown(300, 'easeOutCubic');
+	}
+	else {
+
+		$(i).slideUp(300, 'easeOutCubic');
+	}
+
+
+}
+
+function linkTab() {
+	var tab = $(".linkTab");
+	var tabUl = tab.find(">ul");
+	var tabLi = tab.find(">ul>li");
+	var text = "";
+
+	tabLi.each(function () {
+		if($(this).find("a").hasClass("on")){
+			text = $(this).find(">a>span").text();
+		}
+	});
+
+	/*$(".tab-col-3 li:nth-child(3n+1) a").css({borderLeft:"1px solid #d6d6e0"});
+	 $(".tab-col-4 li:nth-child(4n+1) a").css({borderLeft:"1px solid #d6d6e0"});
+	 $(".tab-col-5 li:nth-child(5n+1) a").css({borderLeft:"1px solid #d6d6e0"});
+	 $(".tab-col-6 li:nth-child(6n+1) a").css({borderLeft:"1px solid #d6d6e0"});*/
+
+	tab.prepend("<button class='mlinkTab_btn' onClick='return false;'>" + text + "</button>");
+
+	$(document).on("click", ".mlinkTab_btn", function () {
+		if($(this).next("ul").is(":hidden")){
+			$(this).addClass("on");
+			$(this).next("ul").stop().slideDown("fast");
+		}else{
+			$(this).removeClass("on");
+			$(this).next("ul").stop().slideUp("fast");
+		}
+	});
+}
+
+function aT_link() {/* 회원가입_약관_상단탭 */
+
+	var areaT = $(".area_wrap .areaTab");
+	var aT_btn = areaT.find(">li>a");
+	var aT_btnF = areaT.find(">li:first>a");
+	var aT_Con = areaT.find(">li>div");
+	var aT_ConF = areaT.find(">li:first>div");
+	var tabH = aT_btnF.outerHeight(true) + aT_ConF.outerHeight(true);
+
+
+
+	aT_btnF.addClass("on");
+	aT_ConF.show();
+	areaT.height(tabH);
+
+	aT_btn.on("click",function () {
+		aT_btn.removeClass("on");
+		aT_Con.hide();
+
+		var tabH = $(this).outerHeight(true) + $(this).next().outerHeight(true);
+
+		$(this).addClass("on");
+		$(this).next().show();
+		areaT.height(tabH);
+
+		return false;
+	});
+
+	$(window).resize(function () {
+		var aT_btnOn = areaT.find(">li>a.on");
+		var tabH = aT_btnOn.outerHeight(true) + aT_btnOn.next().outerHeight(true);
+		areaT.height(tabH);
+	});
+}
+
+function snsPop() {
+	$(".util_sns").on("click",function () {
+		if($(this).next(".sns_group").is(":hidden")){
+			$(this).next(".sns_group").slideDown(300, 'easeOutCubic');
+		}else{
+			$(this).next(".sns_group").slideUp(300, 'easeOutCubic');
+		}
+		return false;
+	});
+	$(document).on("click",function (e) {
+		if(!$(e.target).is('.sns_group, .sns_group strong, .sns_group ul, .sns_group ul li, .sns_group ul li a')){
+			$(".sns_group").slideUp(300, 'easeOutCubic');
+		}
+	});
+
+	$(".snsClose").on("click",function () {
+		$(this).parents(".sns_group").slideUp(300, 'easeOutCubic');
+	});
+}
+
+
+// jquery ui 달력 한글
+$.datepicker.setDefaults({
+	dateFormat: 'yy-mm-dd',
+	prevText: '이전 달',
+	nextText: '다음 달',
+	monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+	monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+	dayNames: ['일', '월', '화', '수', '목', '금', '토'],
+	dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+	dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+	showMonthAfterYear: true,
+	yearSuffix: '년',
+	changeYear:true,
+	changeMonth:true
+});
+
+$(function() {
+	$(".datepicker").datepicker();
+});
+
+//이미지 자동 위치 조정
+
+function images() {
+
+	var preview = $('.autosize');
+
+	//console.log(preview.length);
+
+	if (!preview) {
+
+		return false;
+	}
+
+	var previewLen = preview.length;
+
+	$(preview).attr('style','width:100%;height:auto;max-height:none;max-width:none;');
+
+	function images() {
+
+	    var preview = $('.autosize');
+
+	    //console.log(preview.length);
+
+	    if (!preview) {
+
+	        return false;
+	    }
+
+	    var previewLen = preview.length;
+
+	    $(preview).attr('style','width:100%;height:auto;max-height:none;max-width:none;');
+
+	    function insertAnimateFrame() {
+
+	        var cnt = 0;
+
+	        for (var i=0; i<previewLen; i++) {
+
+	            var ph = $(preview[i]).parent().height();
+	            var pw = $(preview[i]).parent().width();
+
+	            var cssArry = {};
+
+	            if (preview[i].complete) {
+
+	                cnt++;
+
+	                if (preview[i].clientHeight > ph) {
+
+	                    cssArry.width = 'auto';
+	                    cssArry.height = '100%';
+	                    cssArry.marginTop = '0';
+	                }
+
+	                if (preview[i].clientHeight < ph) {
+
+	                    cssArry.width = '100%';
+	                    cssArry.height = 'auto';
+	                    cssArry.marginTop = (ph-preview[i].clientHeight)/2;
+	                }
+
+	                $(preview[i]).css(cssArry);
+
+	            }
+	            else {
+
+	                continue;
+	            }
+
+	        }
+
+	        if (typeof cancelAnimationFrame == 'function' && cnt == previewLen) {
+
+	            return window.cancelAnimationFrame(insertAnimateFrame);
+	        }
+
+	        return window.requestAnimationFrame(insertAnimateFrame);
+	    }
+
+	    window.requestAnimationFrame(insertAnimateFrame);
+	};
+};
+
+function fileDel() {
+    const targetEl = document.getElementById('filelistdl');
+
+    if( !(targetEl  == "" || targetEl  == null || targetEl  == undefined)){
+        // MutationObserver를 생성
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if(mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        var filedelnode = node.parentNode.parentNode.getElementsByClassName('fileDel');
+                        filedelnode.item(0).style.display = "block";
+                    });
+                }
+            });
+        });
+
+        observer.observe(targetEl, { childList: true, subtree: true });
+
+        const changeTextButton = targetEl.getElementsByClassName('fileDel');
+        /*
+        changeTextButton.item(0).addEventListener('click', function() {
+            var filedelnode = changeTextButton;
+            filedelnode.item(0).style.display = "none";
+        });
+
+        changeTextButton.item(1).addEventListener('click', function() {
+            var filedelnode = changeTextButton;
+            filedelnode.item(1).style.display = "none";
+        });
+
+        changeTextButton.item(2).addEventListener('click', function() {
+            var filedelnode = changeTextButton;
+            filedelnode.item(2).style.display = "none";
+        });
+        */
+    }
+
+	//파일첨부시 삭제버튼 보여주기 기존
+	/*$("body").on('DOMSubtreeModified', ".file_name", function() {
+		if($(this).length) {
+			$(this).siblings(".fileDel").show();
+		}else{
+			$(this).siblings(".fileDel").hide();
+		}
+	});*/
+}
+
+// 검색 : 예약일 안내
+function searchInfoScheduls () {
+
+	var btn = $('.schedule_info');
+
+	if (!btn.length) {
+
+		return false;
+	}
+
+	var obj = $('.info_layer');
+
+	var prevThis = btn;
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.hasClass('ov')) {
+
+			t.removeClass('ov');
+		}
+		else {
+
+			t.addClass('ov');
+		}
+
+		prevThis = t;
+
+	});
+
+	obj.on('mouseleave', function () {
+
+		prevThis.removeClass('ov');
+	});
+
+	return 1;
+}
+
+function fakeSelectBox () {
+
+	var parent = $('#fakeSelectBox');
+	var btn = parent.find('.select_label a');
+	var obj = parent.find('.select_option');
+	var item = obj.find('li a');
+
+	var hiddenSelect = $('#hiddenSelect');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		if (obj.css('display') == 'none') {
+
+			obj.stop(1, 1).show();
+		}
+		else {
+
+			obj.stop(1, 1).hide();
+		}
+	});
+
+	parent.on('mouseleave', function () {
+
+		if (obj.css('display') == 'block') {
+
+			obj.stop(1, 1).hide();
+		}
+
+	});
+
+	item.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		var idx = item.index(t);
+
+		btn.text(t.text());
+
+		hiddenSelect.children().removeAttr('checked').eq(idx).attr('checked', 1);
+
+		obj.stop(1, 1).hide();
+	});
+
+	return 1;
+}
+
+function totSchBtn () {
+
+	var btn = $('.totSch_btn');
+	var search = $('.general_search');
+	var ani = $('#animate');
+
+	btn.on('click', function (event) {
+
+		hideGroup('.general_search');
+
+		event.preventDefault();
+
+		if (search.is(':hidden')) {
+
+			search.fadeIn(300);
+
+			ani.css('background-color', '#fff');
+		}
+		else {
+
+			search.fadeOut(300);
+
+			ani.removeAttr('style');
+		}
+
+		$('html, body').animate({ scrollTop: 0} , 300, 'easeOutExpo');
+	});
+
+	$('.gsearch_close').on('click', function (event) {
+
+		event.preventDefault();
+
+		ani.removeAttr('style');
+
+		search.fadeOut(300);
+	});
+/*
+	search.on('mouseleave', function (event) {
+
+		ani.removeAttr('style');
+
+		search.fadeOut(300);
+
+	});
+*/
+	var rw = document.body.clientWidth, rtime = 0
+	$(window).resize(function () {
+
+		if (document.body.clientWidth < 1000) {
+
+			if (rw != document.body.clientWidth) {
+
+				clearTimeout(rtime);
+
+				rtime = setTimeout(function () {
+
+					ani.removeAttr('style');
+
+					search.hide();
+
+				}, 100);
+
+				rw = document.body.clientWidth;
+			}
+		}
+	});
+}
+
+
+function sitemap() {    //사이트맵(전체메뉴)
+	var sm_btn = $(".sitemap_btn");
+	var sm = $("#siteMap");
+	var speed = 300;
+	var close = $(".sitemap_close");
+	var dep2btn = $(".sitemap_list>li>ul>li>a");
+	var dep3 = $(".sitemap_list>li>ul>li>ul");
+	var dep3btn = $(".sitemap_list>li>ul>li>ul>li>a");
+	// var winW = $(window).outerWidth();
+
+	var ani = $('#animate');
+
+	sm_btn.on("click",function () {
+
+		hideGroup('#siteMap', function () {
+
+			if ($('#animate').attr('style')) {
+
+				return $('#animate').removeAttr('style');
+			}
+		});
+
+		if(sm.is(":hidden")){
+
+			sm.stop(0, 1).slideDown(speed, 'easeOutCubic');
+
+			ani.css('background-color', '#fff');
+
+		}else{
+
+			sm.stop(0, 1).slideUp(speed, 'easeOutCubic');
+
+			ani.removeAttr('style');
+		}
+	});
+
+	close.on("click",function () {
+
+		sm.stop(0, 1).slideUp(speed, 'easeOutCubic');
+
+		ani.removeAttr('style');
+	});
+
+	dep3.on("mouseenter focusin",function () {
+
+		$(this).prev("a").addClass("ov");
+	});
+	dep3.on("mouseleave focusout",function () {
+
+		$(this).prev("a").removeClass("ov");
+	});
+	dep3btn.on("mouseenter focusin",function () {
+
+		$(this).closest("ul").prev("a").addClass("ov");
+	});
+
+
+	dep2btn.on("click",function () {
+
+		if($(window).width() < 724) {
+
+			if ($(this).next().is(":hidden")) {
+
+				dep2btn.removeClass("on");
+				dep3.stop(0, 1).slideUp(speed, 'easeOutCubic');
+				$(this).addClass("on");
+				$(this).next().stop(0, 1).slideDown(speed, 'easeOutCubic');
+			}else{
+
+				$(this).removeClass("on");
+				$(this).next().stop(0, 1).slideUp(speed, 'easeOutCubic');
+			}
+		}
+
+		if($(this).next().length){
+
+			return false;
+		}
+	});
+
+	dep2btn.each(function () {
+
+		if(!$(this).next().length){
+
+			$(this).addClass("empty");
+		}
+	});
+
+	var rw = document.body.clientWidth, rtime = 0
+	$(window).resize(function () {
+
+		if (document.body.clientWidth < 1100) {
+
+			if (rw != document.body.clientWidth) {
+
+				clearTimeout(rtime);
+
+				rtime = setTimeout(function () {
+
+					ani.removeAttr('style');
+
+					sm.hide();
+
+				}, 100);
+
+				rw = document.body.clientWidth;
+			}
+		}
+	});
+}
+
+function gnb () {
+
+	var gnb = $('#tm>li>a');
+	var ani = $('#animate');
+
+	gnb.on('mouseenter focusin', function (event) {
+
+		hideGroup(false, function () {
+
+			return $('#animate').removeAttr('style');
+		});
+
+                $("#tm ul").css('display','inline-block');
+                $(".gnb_bg").css('display','inline-block');
+		ani.addClass('ov');
+	});
+
+	ani.on('mouseleave', function (event) {
+
+		ani.removeClass('ov');
+                $("#tm ul").css('display','none');
+                $(".gnb_bg").css('display','none');
+	});
+
+
+	return this;
+}
+
+function myContBtn () {
+
+	var btn = $('.myCont_btn');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		hideGroup('.myPage.my_menu', function () {
+
+			if ($('#animate').attr('style')) {
+
+				return $('#animate').removeAttr('style');
+			}
+		});
+
+		if ($('.my_menu').is(':hidden')) {
+
+			$('.my_menu').show();
+		}
+		else {
+
+			$('.my_menu').hide();
+		}
+	});
+
+	return this;
+}
+
+function blind_on(){    //검정색 투명 블라인드 ON
+	$(".blind").css({display:"block"});
+	$(".blind").stop().animate({opacity:0.5},500);
+}
+function blind_off(){   //검정색 투명 블라인드 OFF
+	$(".blind").stop().animate({opacity:0},500,function () {
+		$(".blind").css({display:"none"});
+	});
+}
+
+function mMenu() {  //모바일 메뉴
+	var mBtn = $(".mMenu_btn");
+	var menuBox = $("#mMenu");
+	var menuBoxW = $("#mMenu").width();
+	var mClose = $(".mMenu_close");
+	var dep1btn = $(".mMenu_list>li>a");
+	var dep2con = $(".mMenu_list>li>ul");
+	var dep2btn = $(".mMenu_list>li>ul>li>a");
+	var dep3con = $(".mMenu_list>li>ul>li>ul");
+	var dep3btn = $(".mMenu_list>li>ul>li>ul>li>a");
+	var speed = 300;
+
+	dep2btn.each(function () {
+		if ($(this).hasClass("on")) {
+			$(this).closest("ul").show();
+			$(this).closest("ul").prev("a").addClass("on");
+		}
+		if (!$(this).next().length) {
+			$(this).addClass("empty");
+		}
+	});
+	dep3btn.each(function () {
+		if ($(this).hasClass("on")) {
+			$(this).closest("ul").show();
+			$(this).closest("ul").prev("a").addClass("on");
+			$(this).closest("ul").parents("ul").show();
+			$(this).closest("ul").parents("ul").prev("a").addClass("on");
+		}
+	});
+
+	mBtn.on("click", function () {
+		blind_on();
+		menuBox.css({display: "block"}).animate({right: "0px"}, speed);
+		$("body").css({overflow: "hidden", position: "fixed", width: "100%", height: "100%"});
+	});
+
+	mClose.on("click", function () {
+		blind_off();
+		menuBox.animate({right: menuBoxW * -1}, speed, function () {
+			menuBox.css({display: "none"});
+		});
+		$("body").css({overflow: "auto", position: "static", width: "auto", height: "auto"});
+		/*dep1btn.removeClass("on");
+		dep2con.slideUp(speed);*/
+	});
+
+	$(function () {     //블라인드 클릭시 블라인드 및 모바일 메뉴 닫기
+		$(".blind").on("click", function () {
+			blind_off();
+			menuBox.animate({right: menuBoxW * -1}, speed, function () {
+				menuBox.css({display: "none"});
+			});
+			$("body").css({overflow: "auto", position: "static", width: "auto", height: "auto"});
+			/*dep1btn.removeClass("on");
+			dep2con.slideUp(speed);*/
+		});
+	});
+
+	dep1btn.on("click", function () {
+		dep2con.slideUp(speed);
+		dep1btn.removeClass("on");
+		if ($(this).next("ul").is(":hidden")) {
+			$(this).addClass("on").next("ul").slideDown(speed);
+		} else {
+			$(this).removeClass("on").next("ul").slideUp(speed);
+		}
+		return false;
+	});
+	dep2btn.on("click", function () {
+		dep3con.slideUp(speed);
+		dep2btn.removeClass("on");
+		if ($(this).next("ul").is(":hidden")) {
+			$(this).addClass("on").next("ul").slideDown(speed);
+		} else {
+			$(this).removeClass("on").next("ul").slideUp(speed);
+		}
+		if ($(this).next("ul").length) {
+			return false;
+		}
+	});
+}
+
+function mySearchOpen() {
+
+	var parent = $('.my_search_open');
+
+	if (!parent) {
+
+		return false;
+	}
+
+	var btn = parent.find('>a');
+	var obj = parent.find('.category_tab');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		if (obj.css('display') == 'none') {
+
+			obj.show();
+		}
+		else {
+
+			obj.hide();
+		}
+
+	});
+
+	return 1;
+
+}
+
+function bing () {
+
+	var btn = $('.bing');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		$('#bing').toggle();
+
+	});
+
+	return 1;
+}
+
+function bodoThumbFlag () {
+
+	var flag = $('.search_content .bodo_thumb .flag>a');
+
+	flag.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.hasClass('ov')) {
+
+			t.removeClass('ov');
+
+			t.next().hide();
+		}
+		else {
+
+			t.addClass('ov');
+
+			t.next().show();
+		}
+
+		$('body').append('<div style="position:fixed;top:0;left:0;width:100%;height:100%;" id="outBodoThumbFlag"></div>');
+
+	});
+
+	$(document).on('mouseenter', '#outBodoThumbFlag', function (event) {
+
+		event.preventDefault();
+
+		flag.removeClass('ov')
+
+		$(this).remove();
+
+		$('.search_content .bodo_thumb .flag ul').hide();
+
+	})
+
+	return 1;
+}
+
+function gradeStar () {
+
+	if (!$('.grade').length) {
+
+		return false;
+	}
+
+	var gradeBar = $('.grade .grade_bar');
+	var gradeStar = $('.grade .grade_star a');
+	var gradeHidden = $('grade .grade_hidden');
+
+	var gradeArr = [20, 40, 60, 80, 100];
+
+	// data-grade 로 gradeArr 을
+	gradeBar.css( 'width', gradeArr[gradeBar.data('grade')-1] + '%' );
+
+	// hidden input value 에 입력
+	gradeHidden.val(gradeArr[gradeBar.data('grade')]);
+
+	if (!gradeStar.length) {
+		// 쓰키에서는 a 링크 활용
+		// 읽기 에서는 span 활용 으로 스기와 읽기 이벤트 부여 구분
+		return false;
+	}
+
+	// 클릭 이벤트
+	gradeStar.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+		var idx = gradeStar.index(t);
+
+		// idx 로 gradeArr 사용
+		gradeBar.css( 'width', gradeArr[idx]+'%' );
+
+		// idx 를 hidden input value 에 입력
+		gradeHidden.val(idx+1);
+
+	});
+
+	return 1;
+}
+
+function foldItemMore() {
+
+	var parent = $('.fold_list');
+
+	if (!parent.length) {
+
+		return false;
+	}
+
+	var btn = parent.find('.more');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		var obj = t.parent().next();
+
+		if (obj.css('display') == 'none') {
+
+			t.parent().find('.more').addClass('close');
+			obj.show();
+		}
+		else {
+
+			t.parent().find('.more').removeClass('close');
+			obj.hide();
+		}
+
+	});
+
+	return this;
+}
+
+function foldToggle () {
+
+	var parent = $('.fold_slidetoggle');
+
+	if (!parent.length) {
+
+		return false;
+	}
+
+	var btn = parent.find('.toggle_ti a');
+
+	btn.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		var obj = t.parent().next();
+
+		if (obj.css('display') == 'none') {
+
+			t.addClass('ov');
+			obj.show();
+		}
+		else {
+
+			t.removeClass('ov');
+			obj.hide();
+		}
+
+	});
+
+	return this;
+}
+
+
+function rlTit() {
+
+	var parent = $('.rl_tit');
+	var item = parent.find('li');
+
+	parent.css('width', ((100/7).toFixed(2)*item.length).toFixed(2)+'%');
+
+	return this;
+}
+
+/**********************************************************
+ *
+ * 통합검색 스크립트
+ *
+ ***********************************************************/
+function rmGeneralSearch() {
+
+	if ($(window).width() <= 1000 && $('#categoryCloseParent').length) {
+
+		$('#categoryCloseParent').removeAttr('style');
+		$('#mo_categoryCloseAction').removeAttr('style');
+		$('.general_search_body .back').removeAttr('style');
+	}
+}
+
+function generalSearch() {
+
+
+	var searchContentParent = $('#searchContentParent');
+
+	if (!searchContentParent.length) {
+
+		return false;
+	}
+
+	var searchContentButton = searchContentParent.find('.item_title a');
+
+	// searchContentButton.on('click', function (event) {
+
+	// 	event.preventDefault();
+
+	// 	var t = $(this);
+
+	// 	if (t.hasClass('in_action')) {
+
+	// 		t.removeClass('in_action')
+	// 			.parent().next().stop(0, 1).slideUp(300, 'easeOutCubic');
+	// 	}
+	// 	else {
+
+	// 		t.addClass('in_action')
+	// 			.parent().next().stop(0, 1).slideDown(300, 'easeOutCubic');
+	// 	}
+	// });
+
+	$('#mo_categoryCloseAction').on('click', function (event) {
+
+		event.preventDefault();
+
+		$(this).hide();
+
+		$('.general_search_body .back').stop(0, 1).fadeIn(700, 'easeOutCubic');
+
+		$('#categoryCloseParent').stop(0, 1).animate({ 'left': 0 }, 700, 'easeOutCubic');
+
+	});
+
+	$('.general_search_body .back').on('click', function (event) {
+
+		$('#mo_categoryCloseAction').stop(0, 1).delay(300).fadeIn(500);
+
+		$('.general_search_body .back').stop(0, 1).fadeOut(700, 'easeOutCubic');
+
+		$('#categoryCloseParent').stop(0, 1).animate({ 'left': '-100%' }, 700, 'easeOutCubic');
+
+	});
+}
+
+
+function filterCategory() {
+	var categoryCloseParent = $('#categoryCloseParent');
+
+	if(!categoryCloseParent) {
+
+		return false;
+	}
+
+
+	var categoryTabButton = categoryCloseParent.find('.tab_title');
+
+	var categoryItemTitle = categoryCloseParent.find('.item_title a');
+
+	var inActiveSldeItem = categoryCloseParent.find('.item_pt.slide');
+
+	for (var j=0; j<inActiveSldeItem.length; j++) {
+
+		if (inActiveSldeItem.eq(j).find('.in_active').length) {
+
+			inActiveSldeItem.eq(j).show();
+		}
+	}
+
+	categoryItemTitle.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.hasClass('in_active')) {
+
+			t.removeClass('in_active');
+
+			t.parent().next().filter('.slide').stop(0, 1).slideUp(300, 'easeOutCubic');
+
+		}
+		else {
+
+			t.addClass('in_active');
+
+			t.parent().next().filter('.slide').stop(0, 1).slideDown(300, 'easeOutCubic');
+		}
+
+	});
+
+	var returnThis = categoryTabButton;
+
+	function categoryTabItem(idx) {
+
+		var categoryTabItem = categoryCloseParent.find('.tab_body:eq('+idx+') .body_item');
+		var categoryTabItemLen = categoryTabItem.length;
+
+		//console.log(categoryTabItemLen);
+
+		for (var i=0; i<categoryTabItemLen; i++) {
+
+			categoryTabItem.eq(i).css({
+
+				top: -10,
+				opacity: 0
+
+			}).stop(0, 1).delay(50*(i*0.8)).animate({ top: 0, opacity: 1 }, 150, 'easeOutCubic');
+
+		}
+
+		return 1;
+	}
+
+	categoryTabButton.on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+		var idx = categoryTabButton.index(t);
+
+		if (!t.hasClass('in_action')) {
+
+			if (returnThis) {
+
+				returnThis.removeClass('in_action').next().hide();
+			}
+
+			t.addClass('in_action').next().show();
+		}
+
+		categoryTabItem(idx);
+
+		returnThis = t;
+	});
+
+	var saveParentWidth = categoryCloseParent.outerWidth();
+
+	$('#categoryCloseAction').on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.hasClass('in_action')) {
+
+			t.removeClass('in_action');
+
+			categoryCloseParent.css('display', 'block')
+				.stop(0, 1).animate({
+
+				marginLeft: 0,
+				opacity:1
+
+			}, 300, 'easeOutCubic')
+
+				.next().stop(0, 1).animate({ paddingLeft: 40 }, 300, 'easeOutCubic');
+
+			t.parent().stop(0, 1).animate({ left: 240 }, 300, 'easeOutCubic');
+
+		}
+		else {
+
+			t.addClass('in_action');
+
+			categoryCloseParent
+				.stop(0, 1).animate({
+
+					marginLeft: saveParentWidth*-1,
+					opacity:0
+
+				}, 300, 'easeOutCubic',
+				function () {
+
+					$(this).css('display', 'none');
+
+				})
+
+				.next().stop(0, 1).animate({ paddingLeft: 0 }, 300, 'easeOutCubic');
+
+			t.parent().stop(0, 1).animate({ left: -60 }, 300, 'easeOutCubic');
+		}
+	});
+
+	$('#categoryCloseParent .item_pt .checker').on('click', function (event) {
+
+		event.preventDefault();
+
+		var t = $(this);
+
+		if (t.next().is('input[type=checkbox]')){
+
+			if (t.next()[0].checked) {
+
+				t.removeClass('in_active');
+
+				t.next()[0].checked = false;
+			}
+			else {
+
+				t.addClass('in_active');
+
+				t.next()[0].checked = true;
+			}
+		}
+
+	});
+
+	$('#filterReset').on('click', function (event) {
+
+		event.preventDefault();
+
+		$.each($('#categoryCloseParent .in_active'), function () {
+
+			var t = $(this);
+
+			t.next().attr('checked', false);
+
+		});
+
+		$('#categoryCloseParent .in_active').removeClass('in_active');
+
+	});
+
+	var rtime = 0;
+	var rw = document.body.clientWidth;
+	$(window).resize(function () {
+
+		if (rw != document.body.clientWidth) {
+
+			if (rw <= 1000) {
+
+				clearTimeout(rtime);
+
+				rtime = setTimeout(function () {
+
+					$('.category_button').removeAttr('style');
+					$('#categoryCloseParent').removeAttr('style');
+					$('#searchContentParent').removeAttr('style');
+					$('#categoryCloseAction').removeClass('in_action');
+
+				}, 100);
+			}
+
+			rw = document.body.clientWidth;
+		}
+	});
+
+
+}
+
+function mainYeyackSearchName () {
+    var btn = $('.yeyakSearchName');
+    var wrap = $('.preview_wrap');
+
+    if (!btn.length) {
+        return false;
+    }
+
+    btn.on('click', function (event) {
+        event.preventDefault();
+        $(this).parent().parent().toggleClass('ov');
+    });
+
+    wrap.on('mouseleave', function (event) {
+        $(this).find('.preview_locate').prev().removeClass('ov');
+        $(this).find('.label a').focus();
+    });
+
+     return this;
+
+    /*
+	var btn = $('.yeyakSearchName');
+	var wrap = $('.preview_wrap');
+
+	if (!btn.length) {
+		return false;
+	}
+
+	 $(document).off('.keyAutoOut').on('keydown.keyAutoOut focusout.keyAutoOut', '.preview_locate a:last-child', function (event) {
+		 if (event.keyCode == 9) {
+			 $('.preview_locate').prev().removeClass('ov');
+		 }
+	 });
+
+    $(document).off('.keyAutoComplete').on('keydown.keyAutoComplete', '.preview_locate a', function (event) {
+    	if (event.keyCode ==  38) {
+    		// 위
+    		event.preventDefault();
+        	if ($(this).index() == 0) {
+        		btn.focus();
+        	}
+        	else {
+        		$(this).prev().focus();
+        	}
+    	}
+
+    	if (event.keyCode ==  40) {
+    		// 아래
+    		event.preventDefault();
+    		$(this).next().focus();
+    	}
+    });
+
+    btn.on('keypress keydown', function (event) {
+    	if (event.keyCode ==  40) {
+    		// 아래
+    		event.preventDefault();
+    		$('.preview_locate a').first().focus();
+    	}
+
+    	if (event.keyCode ==  13) {
+    		event.preventDefault();
+    		var locateItem = $('.preview_locate a');
+    		if (locateItem.length) {
+    			locateItem.first().click();
+    			btn.focus();
+    		}
+    	}
+    });
+
+    btn.on('focusin', function (event) {
+        btn.select();
+    });
+
+    wrap.on('mouseleave', function (event) {
+        btn.focus().parent().removeClass('ov');
+    });
+
+    return this;
+    */
+}
+
+
+
+// 실행부
+$(function () {
+
+	rlTit();
+
+	foldItemMore();
+
+	gradeStar();
+
+	bodoThumbFlag();
+
+	bing();
+
+	$("#wrap").prepend("<div class='blind'></div>");
+	$(".blind").css({display:"none",position:"fixed",left:0,top:0,width:"100%",height:"100%",background:"#000",opacity:0,zIndex:998});
+
+	// 레이아웃 제어
+	window.Layout = new layout({
+
+		selector: {
+			head: '#header',
+			nav: '#navigator',
+			locate: '#navigator .location>a',
+			locateDropnMenu: '#navigator .location .locate_drop_menu',
+			container: '#container'
+		}
+
+	});
+
+	// 레이아웃 제어
+	window.FsSearch = new fsSearch({
+
+		selector: {
+			head: '#header',
+			nav: '#flowting_search .fs_wrap',
+			container: '#container'
+		}
+
+	});
+
+
+	window.onresize = function () {
+
+		//20240125 안드로이드 키보드나올시 resize가 되어 통합검색이 되지 않아 주석처리
+		//hideGroup();
+	    hideGroup('.general_search');
+
+		//fasterAptRes();
+
+		//rmPicker(); // 날짜 선택 달력 삭제
+
+		rmGeneralSearch(); // 통합검색 필더 리사이즈시 초기화
+
+		images(); // images autosize
+
+		calResize(); // 달력 위치 조정
+
+		return 1;
+	};
+
+	gnb();  //GNB메뉴
+	mMenu(); //모바일메뉴
+	myContBtn() // 나의메뉴
+	totSchBtn() // 통합검색
+
+	generalSearch(); // 통합검색
+	filterCategory(); // 검색 필터
+	mySearchOpen(); // 맞춤검색 필터
+
+	linkTab(); // 서브페이지 상단 탭버튼 반응형
+
+    (function () {
+        // 커스텀 스크롤
+
+        // 월별예약현황(빠른예약)
+        // 주말추첨제현황
+        // 성수기추첨제현황
+        // 장애인우선예약추첨제현황
+
+
+        /*$('#naver').mCustomScrollbar({
+
+            axis:"y" // horizontal scrollbar
+        });*/
+    })();
+
+
+	//fasterAptRes(); // 빠른예약 반응형 최적화
+	placeholderLabel(); // label 을 placeholder 처럼 쓰기
+	resDetail();    //예약목록 버튼클릭이벤트
+	resPossible();  //예약가능조회
+	agrCon();   //약관내용보기
+	tableResponsed();
+	aT_link();  //회원가입_약관_상단탭
+	snsPop();   //SNS공유 레이어팝업
+	// 이미지 로드 체크 후 리사이징
+	images(); // images autosize
+	fileDel();  //파일첨부시 삭제버튼 보여주기
+
+	searchInfoScheduls(); // 검색 결과의 선착수, 추첨 접수중 클릭시 에약일 안내 레이어
+
+	fakeSelectBox(); // 맞춤검색 원하시는 유형 셀렉트박스
+
+	sitemap();  //사이트맵(전체메뉴)
+
+	foldToggle();
+
+	mainYeyackSearchName();
+
+
+});
+
+function returnTop() {
+
+    $('html, body').animate({scrollTop: 0}, 300, 'easeOutExpo');
+
+    return 1;
+}
+
+
+
+function fn_failMsg(jqXHR, textStatus, errorThrown){
+
+        var vErrorMessage = fn_toJsonObject(jqXHR.responseText).ErrorMsg;
+
+        // return 코드 확인
+        if (jqXHR.status == 401 || jqXHR.status == 403) {
+            alert(vErrorMessage);
+            $(location).attr('href',"/com/login.do");
+        }
+        else if (jqXHR.status == 404) {
+                alert("요청페이지를 찾을 수 없습니다.");
+        }
+        else {
+            console.log("jqXHR.responseText = " + jqXHR.responseText)
+            if (typeof layoutMain != "undefined") {
+                dhtmlx.alert({
+                    title:"알림",
+                    type:"alert-error",
+                    text:vErrorMessage,
+                    ok:"확인"
+                });
+            } else {
+                alert(vErrorMessage);
+            }
+        }
+    }
+
+function fn_toJsonObject(textJson) {
+    var objJson;
+    try {
+        objJson = JSON.parse(textJson);
+    } catch (e){
+    }
+    return objJson;
+}
+function cal_format(_date1) {
+    var dateStringKor = new Array('일', '월', '화', '수', '목', '금', '토');
+    var d_date = new Date(_date1.substring(0,4), Number(_date1.substring(4,6))-1, _date1.substring(6,8));
+    return _date1.substring(2,4)+"/"+_date1.substring(4,6)+"/"+_date1.substring(6,8)+"("+dateStringKor[d_date.getDay()]+")";
+}
+
+function fn_gnrlSrch() {
+    var form = document.gnrlSrch;
+    var curr_query = form.srchWord.value;
+    if(curr_query == ''){
+        alert('검색어를 입력하세요.');
+        return false;
+    }else{
+        form.action = "/pot/is/gs/selectGnrlSrchView.do";
+        form.target = "_self";
+        form.method = "get";
+        form.submit();
+    }
+}
+
+function fn_gnrlSrchWord() {
+    var form = document.gnrlSrchWord;
+    var curr_query = form.srchWord.value;
+    if(curr_query == ''){
+        alert('검색어를 입력하세요.');
+        return false;
+    }else{
+        form.action = "/pot/is/gs/selectGnrlSrchView.do";
+        form.target = "_self";
+        form.method = "get";
+        form.submit();
+    }
+}
+
+$(function() {
+    $('#genaralSearchInput').focus(function(){
+        $( "#genaralSearchInput" ).autocomplete({
+            source : function( request, response ) {
+                 $.ajax({
+                        type: 'get',
+                        url: "/pot/is/gs/selectAjaxAutoWordList.do",
+                        dataType: "json",
+                        //request.term = $("#genaralSearchInput").val()
+                        data: { term : $("#genaralSearchInput").val() },
+                        success: function(data) {
+                            //서버에서 json 데이터 response 후 목록에 뿌려주기 위함
+                            if(data.result != null) {
+                            response(
+                                $.map(data.result, function(item) {
+                                    return {
+                                        label: item.key,
+                                        value: item.key
+                                    }
+                                })
+                            );
+                        }
+                        }
+                   });
+                },
+            //조회를 위한 최소글자수
+            minLength: 2,
+            select: function( event, ui ) {
+                // 만약 검색리스트에서 선택하였을때 선택한 데이터에 의한 이벤트발생
+                $('#genaralSearchInput').val(ui.item.label);
+                fn_gnrlSrch();
+            },
+            open: function(){
+                $(this).autocomplete('widget').css('z-index', 200);
+                return false;
+            },
+            focus: function( event, ui ) {
+                return false;
+
+            }
+        });
+
+    });
+
+    fn_rcmndWord('rcmndWord');
+
+});
+
+function fn_rcmndWord(rtrnObj) {
+    $.ajax({
+        url : '/pot/is/gs/selectAjaxRcmndWordList.do',
+        type : 'get',
+        data : {},
+        dataType : 'json',
+        success : function(data) {
+
+            if(data.result != null) {
+                var result = data.result;
+
+                result.forEach(function(item, idx) {
+                    var key = item.key;
+
+                    //alert(key);
+
+                    $("#"+rtrnObj).append('<a href="#rcmndWordLbl" onClick="fn_rcmnfSrch(\''+key+'\'); return false;">'+key+'</a>');
+                });
+            }
+
+        },
+        error : function(err) {
+
+        }
+    });
+
+}
+
+function fn_rcmnfSrch(rcmndWord) {
+    $('#srchWordLbl').hide();
+    $('#genaralSearchInput').val(rcmndWord);
+    fn_gnrlSrch();
+}
+
+function fn_drawList(){
+    $.ajax({
+        url:'/com/selectDrawList.do',
+        type:'get',
+        async : 'false',
+        dataType:'json',
+        success:function(data){
+
+            var drawHtml = "";
+
+            var result = data.result;
+
+            drawCnt = result.length;
+
+            result.forEach(function(item, idx) {
+                var drltsTpcd = item.drltsTpcd;
+                var drltsTpcdNm = item.drltsTpcdNm;
+                var rciptBgnDtm = item.rciptBgnDtm;
+                var rciptEndDtm = item.rciptEndDtm;
+                var useBgnDtm = item.useBgnDtm;
+                var useEndDtm = item.useEndDtm;
+                var nowRcipt = item.nowRcipt;
+                var dday = item.dday;
+
+                if(dday == '0') {
+                    dday = 'day';
+                }
+
+                drawHtml += '<div class="tb_item">';
+
+                drawHtml += '    <a href="#drawLink" onClick="fn_drawLink(\''+drltsTpcd+'\', \''+drltsTpcdNm+'\', \''+rciptBgnDtm+'\', \''+nowRcipt+'\')">';
+
+                drawHtml += '        <div class="txt_1">'+drltsTpcdNm+' 신청접수!<br>'+Number(rciptBgnDtm.substring(4,6))+'월 '+Number(rciptBgnDtm.substring(6,8))+'일 '+Number(rciptBgnDtm.substring(8,10))+'시 오픈</div>';
+                if(nowRcipt == 'N') {
+                    drawHtml += '        <div class="txt_2">오픈까지</div>';
+                    drawHtml += '        <div class="txt_3"><i>D-'+dday+'</i></div>';
+                }else{
+                    drawHtml += '        <div class="txt_3"><img src="/portal/images/layout/tb_banner_bell.png" alt=""> 접수중</div>';
+                }
+                drawHtml += '    </a>';
+                drawHtml += '</div>';
+
+
+
+            });
+
+            drawBannerInit();
+
+            $('#tb_obj').append(drawHtml);
+        },
+        error:function(err) {
+
+        }
+    });
+}
+
+function fn_drawLink(drltsTpcd, drltsTpcdNm, rciptBgnDtm, nowRcipt) {
+    if(nowRcipt == 'Y') {
+        if(drltsTpcd == '02001') {
+            //성수추첨 신청 접수 페이지 이동
+            alert('성수추첨 신청 접수 페이지 이동');
+        }else if(drltsTpcd == '02002') {
+            //주말추첨 신청 접수 페이지 이동
+            alert('주말추첨 신청 접수 페이지 이동');
+        }else if(drltsTpcd == '02007') {
+            //월추첨 신청 접수 페이지 이동
+            alert('월추첨 신청 접수 페이지 이동');
+        }
+    }else{
+        alert(drltsTpcdNm+' 신청접수는 '+Number(rciptBgnDtm.substring(4,6))+'월 '+Number(rciptBgnDtm.substring(6,8))+'일 '+Number(rciptBgnDtm.substring(8,10))+'시에 오픈 예정입니다.');
+    }
+}
+
+
+function drawBannerInit() {
+
+
+    if(drawCnt <= 0) {
+
+        var openBtn = $('#header .tp_banner');
+        openBtn.on('click', function (event) {
+            event.preventDefault();
+
+            alert('접수 예정이거나 현재 진행중인 추첨 예약이 없습니다.');
+        });
+
+
+    }else{
+        if (getCookie("topBanner") == "close") {
+            $('#topBanner').hide();
+            $('#header .tp_banner').removeClass('ov');
+        } else {
+            $('#topBanner').show();
+            $('#header .tp_banner').addClass('ov');
+        }
+
+        var param = '#topBanner',
+            obj = '.tb_item',
+            btn = '.tb_control',
+            interval = 5000,
+            speed = 300,
+            viewSize = 1,
+            moreSize = 0,
+            dir = 'x',
+            data = 0,
+            auto = false,
+            hover = false,
+            method = 'easeOutCubic',
+            op1 = false;
+
+            /* stateScrollObj(param,obj,btn,interval,speed,viewSize,moreSize,dir,data,auto,hover,method,op1); */
+
+        var openBtn = $('#header .tp_banner');
+
+        $(param + ' .tb_close').on('click', function (event) {
+
+            event.preventDefault();
+
+            if ( $(param).is(':hidden') ) {
+                setCookie("topBanner", false, 0);
+                $(param).slideDown(300, 'easeOutCubic');
+
+                openBtn.addClass('ov');
+            }
+            else {
+                setCookie("topBanner", "close", 1);
+                $(param).slideUp(300, 'easeOutCubic');
+
+                openBtn.removeClass('ov');
+            }
+        });
+
+        openBtn.on('click', function (event) {
+
+            event.preventDefault();
+
+            if ( $(param).is(':hidden') ) {
+                setCookie("topBanner", false, 0);
+                $(param).slideDown(300, 'easeOutCubic');
+
+                openBtn.addClass('ov');
+            }
+            else {
+                setCookie("topBanner", "close", 1);
+                $(param).slideUp(300, 'easeOutCubic');
+
+                openBtn.removeClass('ov');
+            }
+        });
+
+        var rw = document.body.clientWidth, rtime = 0
+        $(window).resize(function () {
+
+            if (document.body.clientWidth <= 1199) {
+
+                if (rw != document.body.clientWidth) {
+
+                    clearTimeout(rtime);
+
+                    rtime = setTimeout(function () {
+
+                        $(param).removeAttr('style');
+
+                    }, 100);
+
+                    rw = document.body.clientWidth;
+                }
+            }
+        });
+    }
+}
+
+//뒤로가기 방지 함수
+function preventHistoryBack() {
+	history.pushState(null, null, location.href);
+	window.onpopstate = function () {
+	    history.go(1);
+	};
+}
+
+//넷퍼넬을 이용한 화면 이동
+function movePageUsingNetFunnel(url, actionId) {
+	/*
+	$("body").append("<form method='get' id='frmNetFunnel'></form>");
+
+	NetFunnel_Action({action_id: actionId, service_id: "service_1"}, function(ev, ret) {
+        $("#frmNetFunnel").attr("action", url).submit();
+    });
+    */
+	NetFunnel_Action({action_id: actionId, service_id: "service_1"}, function(ev, ret) {
+		location.href = url;
+    });
+}
+
+//넷퍼넬을 이용한 화면 이동_타겟지정
+function movePageUsingNetFunnelTarget(url, actionId, target) {
+	/*
+	$("body").append("<form method='get' id='frmNetFunnel'></form>");
+
+	NetFunnel_Action({action_id: actionId, service_id: "service_1"}, function(ev, ret) {
+        $("#frmNetFunnel").attr("action", url).submit();
+    });
+    */
+	NetFunnel_Action({action_id: actionId, service_id: "service_1"}, function(ev, ret) {
+		//location.href = url;
+		window.open(url, target);
+    });
+}
+
+// 달력 사이즈 조절
+function calResize () {
+    if (!$('.picker_layer').length) {
+        return false;
+    }
+
+    $('.picker_layer').css({
+        top: function () {
+            var mt = '50%';
+            if ($('.picker_layer').outerHeight() > $(window).height()-50) {
+                mt = '50px';
+            }
+            return mt;
+        }(),
+        marginTop: function () {
+            var mt = $('.picker_layer')[0].clientHeight/2*-1;
+            if ($('.picker_layer').outerHeight() > $(window).height()-50) {
+                mt = '0';
+            }
+            return mt;
+        }(),
+        marginLeft: $('.picker_layer').outerWidth()/2*-1
+    })
+}
+function moCalWScroll (dir) {
+
+	var pickerScl = $('.picker_layer .scl');
+
+	if (dir == 'prev') {
+
+		pickerScl.stop(0, 1).animate({ scrollLeft: 0 }, 300, 'easeOutCubic');
+	}
+
+	if (dir == 'next') {
+
+		pickerScl.stop(0, 1).animate({ scrollLeft: pickerScl[0].scrollWidth-pickerScl.outerWidth() }, 300, 'easeOutCubic');
+	}
+}
+
+//모바일 환경 접속 유무
+function isMobile() {
+	var filter = "win16|win32|win64|mac|macintel|linux i686|linux armv7l";
+
+	if(navigator.platform){
+		if(0 > filter.indexOf(navigator.platform.toLowerCase())){
+			return true;
+		}
+	}
+
+	//위 filter조건으로는 갤럭시s5등 구형기기에서 PC로 인식하는 경우가 있어 조건 추가
+	if((/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/).test(navigator.userAgent.toLowerCase())) {
+		return true;
+	}
+
+	return false;
+}
+
+//모바일에서 검색영역 펼치기
+function fsOpenMobile() {
+    var fsObj = $('#flowting_search .fs_wrap .layout');
+    $('.fs_open a').toggle();
+    fsObj.stop(0, 1).slideDown(300, 'easeOutExpo');
+}
+
+function fn_openMypage() {
+
+    var myPageMenu = $('#MBL005 > a');
+    if(!myPageMenu.hasClass('on')) {
+        myPageMenu.click();
+    }
+}
+
+function addPickerMob(_this, write, single, _sctin, _hldtList, mxmmStngDayCnt, _useDtList, toDay) {
+    var returnFocus = $(_this);
+    window.calendarToDay = new Date(toDay.split('-')[0], toDay.split('-')[1] - 1, toDay.split('-')[2]);
+
+    if($("#srchInsttArcd", "form[name='srch_frm']").val() == "" && $("#srchInsttId", "form[name='srch_frm']").val() == "") {
+        alert("지역을 먼저 선택 해 주시기 바랍니다.");
+        $('#calPicker').blur();
+        //$("#keyword", "form[name='srch_frm']").focus();
+        return false;
+    }
+
+    sctin     = _sctin;
+    hldtList  = _hldtList;
+    useDtList = _useDtList;
+
+    var onPicker = function () {
+        $('.picker_layer').css('opacity', 0);
+
+        $('#forestCalPicker').fadeIn(300, 'easeOutCubic', function () {
+
+            $('.picker_layer').css({
+
+                position: 'absolute',
+                top: function () {
+                    var mt = '50%';
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '50px';
+                    }
+                    return mt;
+                }(),
+                left: '50%',
+                marginTop: function () {
+
+                    var mt = $('.picker_layer')[0].clientHeight/2*-1;
+
+                    if ($('.picker_layer').outerHeight() > $(window).height() - 50) {
+                        mt = '0';
+                    }
+                    return mt;
+                }(),
+                marginLeft: $('.picker_layer')[0].clientWidth/2*-1,
+                opacity: 1
+            }).fadeIn(300);
+
+
+        });
+
+        $('.picker_layer').focus();
+    }
+
+    var offPicker = function () {
+        $('#forestCalPicker').remove();
+        $('.picker_back').remove();
+    }
+
+    if ($('#forestCalPicker').length) {
+        offPicker();
+    }
+
+    var str = ''+
+        '<div id="forestCalPicker" style="z-index:10000;position:absolute;top:0;left:0;width:100%;height:100%;display:none">'+
+        '<div tabindex="0" class="picker_layer '+ ( single ? 'single' : '' ) +'">'+
+
+            '<div class="scl"><div class="scl_wrap"><div class="calendar_wrap"></div></div></div>';
+        str +=
+            '<div class="cal_button">'+
+                '<p id="calPrintDate"></p>'+
+                '<a href="#" class="defBtn board">확인</a>'+
+            '</div>'+
+        '</div>';
+
+    $('body').append(str+'<div class="picker_back" style="z-index:200;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.6)"></div>');
+
+    picker(toDay, 0, write, single, sctin, hldtList, _useDtList);
+
+    if (_this) {
+        var t = $(_this);
+        onPicker();
+    }
+
+    var today = new Date(toDay.split('-')[0], toDay.split('-')[1] -1, toDay.split('-')[2]);
+    var dateSTring = '';
+    var currentDate = today.getFullYear()+'/'+(today.getMonth()+1 < 10 ? '0'+(today.getMonth()+1) : today.getMonth()+1 )+'/'+(today.getDate() < 10 ? '0'+today.getDate() : today.getDate());
+    var checkerArr;
+
+    $('.cal_button a').on('click', function (event) {
+        event.preventDefault();
+
+        // 입실일, 퇴실일 모두 선택되었는지 확인
+        if(checkerArr == undefined || !(checkerArr[0] >=0 && checkerArr[1] >=0)) {
+            alert("입실일, 퇴실일을 선택 해주세요.");
+        }
+       /*
+        if (inputListLabel.state && inputListLabel.label.next().val().length == 0) {
+            alert('예약일을 선택 해주세요.');
+        }
+        */
+        else {
+            $('.picker_back').fadeOut(300, 'easeOutCubic');
+            $('#forestCalPicker').fadeOut(300, 'easeOutCubic');
+            //alert(returnFocus.attr('id'));
+            if(returnFocus.attr('id') == 'finalSearchBtn') {
+                returnFocus.click();
+            }else{
+                returnFocus.focus();
+            }
+            // 달력 선택 - 휴양림의 선택된 숙박기간에 이용가능한 상품이 있는지 자동 조회 (2019.06.27)
+            /*
+            if($("#rsrvtPssblYn", "form[name='srch_frm']").length > 0) {
+                fn_top_goSearch();
+            } else {
+                if($("#goodsClsscHouseCdArr", "form[name='srch_frm']").length > 0) {
+                    fn_goRsvt();
+                } else {
+                    goSearch();
+                }
+            }
+            */
+        }
+    });
+
+
+
+    $(document).off('.picker').on('click.picker', '.picker_layer td a', function (event) {
+        var checker = $('.picker_layer td a');
+        var checkerLen = checker.length;
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin_hol')) {
+                checker.eq(i).removeClass('origin_hol');
+            }
+        }
+
+        checker.find('.cal_txt').remove();
+
+        event.preventDefault();
+        var t = $(this);
+        var checker = $('.picker_layer td a');
+        var idx = checker.index(t);
+        var onDate = t.data('date');
+
+        if (!onDate) {
+            var checkerLen = checker.length;
+            var originCnt = 0;
+            var impssCnt = 0;
+            if(checkerLen > 0) {
+                for (var i=0; i<checkerLen; i++) {
+                    if(checker.eq(i).hasClass('origin')) {
+
+                        originCnt +=1;
+                        onDate = checker.eq(idx).attr('name');
+                    }
+                }
+                if(originCnt < 1) {
+                    return alert('선택 가능 일자가 아닙니다');
+                } else {
+                    if ( checkerArr.length == 1 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0]< idx) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=idx; ii<=checkerArr[0]; ii++) {
+                                //console.log(checker.eq(ii).attr('lang'));
+                                //console.log(!checker.eq(ii).parent().hasClass('not_day'));
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0]) {
+                            impssCnt +=1;
+                        }
+                        if(impssCnt > 1) {
+                            for(var ii=checkerArr[0]; ii<=idx; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            //시작지점보다 이전 날짜(선택불가한)를 선택하였을때 for문에서 체크 못하기 때문에 삭제 처리
+                            checker.eq(checkerArr[0]).removeClass('origin');
+                            checker.eq(checkerArr[0]).removeClass('child');
+                            checker.eq(checkerArr[0]).removeAttr('title');
+                            return alert('선택 가능 일자가 아닙니다.');
+                        }
+                    } else if ( checkerArr.length == 2 ) {
+                        // 선택불가 일자가 마지막 날 하루가 아닌 경우
+                        if(checkerArr[0] < checkerArr[1]) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        } else {
+                            for(var ii=checkerArr[1]; ii<=checkerArr[0]; ii++) {
+                                if(checker.eq(ii).attr('lang')) {
+                                    impssCnt +=1;
+                                }
+                            }
+                        }
+                        if(idx < checkerArr[0] || idx < checkerArr[1]) {
+                            impssCnt +=1;
+                        }
+                        //선택가능 영역 2개 클릭 후 불가 영역 클릭시 체크 되는 현상 수정 위해 주석처리
+                        //if(impssCnt > 0) {
+                            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                                checker.eq(ii).removeClass('origin');
+                                checker.eq(ii).removeClass('child');
+                                checker.eq(ii).removeAttr('title');
+                            }
+                            return alert('선택 가능 일자가 아닙니다.');
+                        //}
+                    } else {
+                        console.log('exception');
+                    }
+                }
+            }
+            if(t.parent().attr('class') != 'not_day') {
+                t.addClass('origin_hol');
+            }
+        }
+
+        var date = new Date();
+        if(!t.parent().attr('class') == 'not_day') {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('.')[0]);
+            var month = Number(getDate.split('.')[1]);
+            var day = Number(getDate.split('.')[2]);
+            date.setFullYear(year, month-1, day);
+        }
+
+        if (!t.hasClass('origin') && onDate) {
+            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+            var year = Number(getDate.split('/')[0]);
+            var month = Number(getDate.split('/')[1]);
+            var day = Number(getDate.split('/')[2]);
+            date.setFullYear(year, month-1, day);
+            if (date.getTime() < today.getTime()) {
+                return alert('금일('+currentDate+') 포함, 이후로 선택 가능합니다.');
+            }
+
+            if (!t.parent().hasClass('not_day')) {
+                if(checkerArr) {
+                    //2개 모두 찍혀있고 다른 영역 선택했을 때 리셋
+                    if (checkerArr[1]) {
+                        checker.eq(checkerArr[0]).removeClass('origin');
+                        checker.eq(checkerArr[1]).removeClass('origin');
+                        checker.eq(checkerArr[0]).removeAttr('title');
+                        checker.eq(checkerArr[1]).removeAttr('title');
+                        checker.removeClass('child');
+                        checker.removeAttr('title');
+                    }
+                    //1개(시작점) 찍혀있고 새로 찍는 날짜가 그 이전 날짜일 경우 시작점 변경
+                    if (checkerArr[0]) {
+                        var ar0 = checker.eq(checkerArr[0]).data('date');
+                        if(ar0 != undefined) {
+                            var ar0Date = new Date();
+                            getDate = ar0.substr(0, ar0.lastIndexOf('('));
+                            year = Number(getDate.split('/')[0]);
+                            month = Number(getDate.split('/')[1]);
+                            day = Number(getDate.split('/')[2]);
+                            ar0Date.setFullYear(year, month-1, day);
+
+                            var curDate = new Date();
+                            var getDate = onDate.substr(0, onDate.lastIndexOf('('));
+                            var year = Number(getDate.split('/')[0]);
+                            var month = Number(getDate.split('/')[1]);
+                            var day = Number(getDate.split('/')[2]);
+                            curDate.setFullYear(year, month-1, day);
+
+                            if(curDate.getTime() < ar0Date.getTime()) {
+                                checker.eq(checkerArr[0]).removeClass('origin');
+                                checker.eq(checkerArr[0]).removeAttr('title');
+                            }
+                            checker.removeClass('child');
+                            checker.removeAttr('title');
+                        }
+                    }
+                }
+                t.addClass('origin');
+                t.attr('title','선택됨');
+            }
+        } else {
+            t.removeClass('origin');
+            t.removeAttr('title');
+            checker.removeClass('child');
+            checker.removeAttr('title');
+            $('#'+$(_this).attr('id')).val('');
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().show()
+            }
+        }
+
+        var checkerLen = checker.length;
+        checkerArr = [];
+        for (var i=0; i<checkerLen; i++) {
+            if(checker.eq(i).hasClass('origin')) {
+                checkerArr.push(i);
+            }
+        }
+
+        if ( checkerArr.length == 2 ) {
+            for (var j=0; j<checkerLen; j++) {
+                if (j == checkerArr[1]) {
+                    break;
+                }
+                if (j > checkerArr[0]) {
+                    if (checker.eq(j).parent().hasClass('not_day')) {
+                        continue;
+                    }
+                    checker.eq(j).addClass('child');
+                    checker.eq(j).attr('title','선택됨');
+                } else {
+                    continue;
+                }
+            }
+            // 휴일이 중간에 걸려있는지 판단
+            //console.warn(checker);
+            var pssblYn = true;
+            for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                var lang = checker.eq(ii).attr('lang');
+                var clss = checker.eq(ii).attr('class');
+                if (lang && clss) {
+                    var onDate = $(this).data('date');
+                    if(onDate) {
+                        pssblYn = false;
+                        break;
+                    }
+                }
+            }
+            if(!pssblYn) {
+                for(var ii=checkerArr[0]; ii<=checkerArr[1]; ii++) {
+                    checker.eq(ii).removeClass('origin');
+                    checker.eq(ii).removeClass('child');
+                    checker.eq(ii).removeAttr('title');
+                }
+                alert("선택 가능 일자가 아닙니다.");
+                return false;
+            }
+
+            // 선택일 일수 판단
+            if(mxmmStngDayCnt != '' && mxmmStngDayCnt != null) {
+                var dayLen = $('.picker_layer').find('.origin').length + $('.picker_layer').find('.child').length;
+                if (dayLen > (mxmmStngDayCnt+1)) {
+                    checker.removeClass('origin').removeClass('child');
+                    checker.removeClass('origin').removeAttr('title');
+                    inputListLabel.input.val('');
+                    return alert("이용일은 " + mxmmStngDayCnt + "박 " + (Number(mxmmStngDayCnt)+Number(1)) + "일까지만 가능합니다.");
+                }
+            }
+
+            if (Number($('#'+$(_this).attr('id')).prev().data('hidden'))) {
+                $('#'+$(_this).attr('id')).prev().hide();
+            }
+
+            $('#'+$(_this).attr('id')).val( checker.eq(checkerArr[0]).attr('name').substr(2) +' - '+ checker.eq(checkerArr[1]).attr('name').substr(2) );
+            $('#rsrvtBgDt').val(checker.eq(checkerArr[0]).attr('name').replace(/[^0-9]/g,""));
+            $('#rsrvtEdDt').val(checker.eq(checkerArr[1]).attr('name').replace(/[^0-9]/g,""));
+        }
+
+        $('#calPrintDate').html((checkerArr[0] >= 0 ? checker.eq(checkerArr[0]).attr('name') : '') + (checkerArr[1] >= 0 ? ' ~ '+checker.eq(checkerArr[1]).attr('name') : ''));
+
+        if (!checker.eq(checkerArr[0]).find('.cal_txt').length) {
+            checker.eq(checkerArr[0]).append('<div class="cal_txt">입실일</div>');
+        }
+
+        if (!checker.eq(checkerArr[1]).find('.cal_txt').length) {
+            checker.eq(checkerArr[1]).append('<div class="cal_txt">퇴실일</div>')
+        }
+    });
+
+    return false;
+}
+
+function photoWrapSlideMulti (objId) {
+
+    var param = objId,  // 인자 추가
+         obj = '.item',
+         btn = '.photo_control',
+         interval = 5000,
+         speed = 300,
+         viewSize = 1,
+         moreSize = 0,
+         dir = 'x',
+         data = 0,
+         auto = false,
+         hover = false,
+         method = 'easeOutCubic',
+         op1 = true;
+
+        stateScrollObj2(param,obj,btn,interval,speed,viewSize,moreSize,dir,data,auto,hover,method,op1);
+ }
