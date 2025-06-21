@@ -15,11 +15,11 @@ def main():
         reservation = ForestReservationSystem(page)
 
         # 3. 예약 프로세스 실행
-        # result_data = reservation.run_reservation_flow()
+        result_data = reservation.run_reservation_flow()
 
-        reservation.run_june_region_test()  # 새 메서드 호출
+        # reservation.run_june_region_test()  # 새 메서드 호출
 
-        # print(result_data)
+        print(result_data)
         # 4. 텔레그램 전송
         # 모든 데이터 기준 한번에 전송
         # if result_data:

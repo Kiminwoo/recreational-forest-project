@@ -48,33 +48,44 @@ class ForestReservationSystem:
         return options
 
     def scrape_current_results(self, context_info):
-        """현재 페이지 결과 스크래핑"""
+        """개선된 스크래핑 로직: 모든 시설 포함 보장"""
         try:
-            # 결과 테이블 확인
-            self.page.wait_for_selector('#dayListTable', state='visible', timeout=15000)
+            self.page.wait_for_selector('#dayListTable', state='visible', timeout=50000)
 
-            # 스크래핑 로직
+            # 모든 시설명 추출
             facilities = self.page.query_selector_all('.list_left .simpleMonthDiv')
+            # 모든 행 추출 (시설별 날짜 데이터)
             rows = self.page.query_selector_all('#dayListTbody tr')
 
+            # 시설-행 일치 검증
+            if len(facilities) != len(rows):
+                print(f"⚠️ 시설-행 불일치: 시설={len(facilities)}개, 행={len(rows)}개")
+                self.page.screenshot(path='mismatch_error.png')
+
             current_result = {
-                "context": context_info,  # 선택된 조건 정보
+                "context": context_info,
                 "data": []
             }
 
-            for facility, row in zip(facilities, rows):
+            print(f"🔍 스크래핑 시작: 총 {len(facilities)}개 시설")
+
+            for idx, (facility, row) in enumerate(zip(facilities, rows)):
                 facility_name = facility.inner_text().strip()
                 facility_entry = {
                     "name": facility_name,
                     "dates": []
                 }
 
-                days = row.query_selector_all('td')
+                # 날짜 셀 추출 (첫 번째 셀 제외)
+                days = row.query_selector_all('td:not(.list_left)')
+
                 for day in days:
                     status_span = day.query_selector('.apt_mark, .apt_mark_2')
                     if status_span:
                         status = status_span.inner_text().strip()
-                        date_str = status_span.get_attribute('title').split()[-1]
+                        date_str = status_span.get_attribute('title')
+                        if date_str:
+                            date_str = date_str.split()[-1]  # "2025.06.15" 추출
 
                         if status.startswith(('예', '대')):
                             facility_entry["dates"].append({
@@ -82,13 +93,19 @@ class ForestReservationSystem:
                                 "status": status
                             })
 
-                if facility_entry["dates"]:  # 예약 가능한 날짜가 있는 경우만 추가
-                    current_result["data"].append(facility_entry)
+                # 예약 가능 여부와 관계없이 모든 시설 포함
+                current_result["data"].append(facility_entry)
+                print(f"  - 시설 {idx + 1}: {facility_name} ({len(facility_entry['dates'])}개 일자)")
+
+            # 최종 요약 출력
+            total_dates = sum(len(f['dates']) for f in current_result["data"])
+            print(f"📊 스크래핑 완료: 시설 {len(facilities)}개, 예약 일자 {total_dates}개")
 
             return current_result
 
         except Exception as e:
             print(f"❌ 스크래핑 오류: {str(e)}")
+            self.page.screenshot(path='scraping_error.png')
             return None
 
     def run_comprehensive_scraping(self):
@@ -352,7 +369,7 @@ class ForestReservationSystem:
             # 7. 검색 실행
             self.safe_click('#searchBtn')
             self.page.wait_for_load_state('networkidle')
-            self.page.wait_for_timeout(2000)
+            self.page.wait_for_timeout(3000)
 
             # 8. 스크래핑 및 전송
             context_info = {
