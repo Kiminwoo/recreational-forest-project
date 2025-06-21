@@ -3,8 +3,7 @@ import configparser
 import re
 
 config = configparser.ConfigParser()
-config.read('config.ini')
-
+config.read('config.ini', encoding='utf-8')
 
 def handle_dynamic_popup(page):
     """동적 팝업 닫기 처리 함수"""
